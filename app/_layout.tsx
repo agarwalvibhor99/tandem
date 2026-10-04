@@ -42,7 +42,7 @@ function AuthenticatedNavigation() {
     <ReminderNotificationProvider>
     <ReminderSyncProvider>
     <DateIdeaSyncProvider>
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Protected guard={!auth.session}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>

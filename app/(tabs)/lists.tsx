@@ -22,14 +22,16 @@ function ListCard({ list }: { list: SharedList }) {
 export default function ListsScreen() {
   const focused = useScreenFocus();
   const { couple, query } = useLists(focused);
-  return <Screen title="Lists" description="Everything you need, kept together." pageTitle="Lists">
+  const refreshing = couple.isFetching || query.isFetching;
+  const refresh = () => { void couple.refetch(); void query.refetch(); };
+  return <Screen title="Lists" description="Everything you need, kept together." pageTitle="Lists" refreshing={refreshing} onRefresh={refresh}>
     {couple.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading shared space" />}
-    {couple.isError && <><Notice error message="We couldn’t load your shared space." /><Button variant="secondary" label="Try again" onPress={() => void couple.refetch()} /></>}
+    {couple.isError && <><Notice error message="We couldn’t load your shared space." /><Button variant="quiet" label="Try again" onPress={() => void couple.refetch()} /></>}
     {couple.isSuccess && !couple.data && <Surface><ListPlus color={colors.accent} size={32} /><Text variant="heading">Lists are better together</Text><Text tone="secondary">Create a shared space to keep groceries, shopping and packing in one place.</Text><Button label="Connect your partner" onPress={() => router.push('/create-space')} /></Surface>}
     {couple.data && <>
       <CompactAction icon={ListPlus} label="New list" onPress={() => router.push('/list/new')} />
       {query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading lists" />}
-      {query.isError && <><Notice error message="We couldn’t load your lists." /><Button variant="secondary" label="Try again" onPress={() => void query.refetch()} /></>}
+      {query.isError && <><Notice error message="We couldn’t load your lists." /><Button variant="quiet" label="Try again" onPress={() => void query.refetch()} /></>}
       {query.isSuccess && query.data.length === 0 && <Surface><ShoppingBasket color={colors.accent} size={32} /><Text variant="heading">A place for the little things</Text><Text tone="secondary">Make a grocery list, plan what to pack, or keep a shopping list you can both add to.</Text><Button variant="quiet" label="Create your first list" onPress={() => router.push('/list/new')} /></Surface>}
       {query.data?.map((list) => <ListCard key={list.id} list={list} />)}
     </>}

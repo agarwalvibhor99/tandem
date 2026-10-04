@@ -31,7 +31,9 @@ export default function DatesScreen() {
     && (duration === 'any' || (duration === 'short' && idea.duration_minutes <= 90)
       || (duration === 'medium' && idea.duration_minutes > 90 && idea.duration_minutes <= 180)
       || (duration === 'long' && idea.duration_minutes > 180)));
-  return <Screen standalone title="Date ideas" description="A shared place for the things you want to try together.">
+  const refreshing = ideas.couple.isFetching || ideas.query.isFetching;
+  const refresh = () => { void ideas.couple.refetch(); void ideas.query.refetch(); };
+  return <Screen standalone title="Date ideas" description="A shared place for the things you want to try together." refreshing={refreshing} onRefresh={refresh}>
     {ideas.couple.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading shared space" />}
     {ideas.couple.isError && <><Notice error message="We couldn’t load your shared space." /><Button label="Try again" onPress={() => void ideas.couple.refetch()} /></>}
     {ideas.couple.isSuccess && !connected && <Surface><Text variant="heading">Start collecting ideas together</Text><Text tone="secondary">Create your shared space to save places and plans you’d both like to try.</Text><Button label="Create your shared space" onPress={() => router.push('/create-space')} /></Surface>}

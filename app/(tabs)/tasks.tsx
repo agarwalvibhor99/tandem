@@ -39,7 +39,7 @@ export default function TasksScreen() {
   const healthy = useTaskSync();
   const rows = projectTaskList(tasks.data?.pages.flat() ?? [], pending, filter, userId, tomorrow);
   const pendingIds = new Set(pending.map(({ task }) => task.id));
-  return <Screen title="Tasks" description="A little less on your mind. One thing at a time.">
+  return <Screen title="Tasks" description="A little less on your mind. One thing at a time." refreshing={tasks.isFetching && !tasks.isFetchingNextPage} onRefresh={() => void tasks.refetch()}>
     <CompactAction icon={Plus} label="New task" onPress={() => router.push('/task/new')} />
     <TaskFilterTabs value={filter} onChange={setFilter} />
     <Text tone="secondary">{explanations[filter]}</Text>
@@ -55,7 +55,6 @@ export default function TasksScreen() {
       </Surface>}
     </>}
     {tasks.hasNextPage && <Button label="Load more" variant="quiet" loading={tasks.isFetchingNextPage} onPress={() => void tasks.fetchNextPage()} />}
-    <Button label="Refresh tasks" variant="quiet" loading={tasks.isFetching && !tasks.isFetchingNextPage} onPress={() => void tasks.refetch()} />
   </Screen>;
 }
 const styles = StyleSheet.create({ list: { gap: spacing.md } });

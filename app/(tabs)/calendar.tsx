@@ -41,7 +41,7 @@ export default function CalendarScreen() {
   const free = partner ? sharedFreeTimeForEntries(allDay, userId, partner.user_id, dayStart, dayEnd, 30) : [];
   const best = allDay.length ? mostUsefulFreeTime(free) : undefined;
   const days = view === 'Day' ? [] : eachDayOfInterval({ start: window.start, end: addDays(window.end, -1) });
-  return <Screen title="Calendar" description="Your plans, your partner’s time, and room to be together." pageTitle="Calendar">
+  return <Screen title="Calendar" description="Your plans, your partner’s time, and room to be together." pageTitle="Calendar" refreshing={query.isFetching} onRefresh={() => void query.refetch()}>
     <CompactAction icon={CalendarPlus} label="New event" onPress={() => router.push('/event/new')} />
     <ChoiceChips label="View" value={view} options={(['Day', 'Week', 'Month'] as const).map((value) => ({ value, label: value }))} onChange={setView} />
     <View style={styles.navigation}><Pressable accessibilityRole="button" accessibilityLabel="Previous period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, -1))}><Text variant="title">‹</Text></Pressable><Text variant="heading" accessibilityLiveRegion="polite">{view === 'Day' ? format(anchor, 'EEEE, MMM d') : view === 'Week' ? `${format(window.start, 'MMM d')}–${format(addDays(window.end, -1), 'MMM d')}` : format(anchor, 'MMMM yyyy')}</Text><Pressable accessibilityRole="button" accessibilityLabel="Next period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, 1))}><Text variant="title">›</Text></Pressable></View>
@@ -52,7 +52,7 @@ export default function CalendarScreen() {
     {filter === 'Partner' && !partner && <Surface><Text variant="heading">Connect your partner</Text><Text tone="secondary">Once they join, you’ll see when they’re busy without seeing private details.</Text><Button label="Invite partner" variant="secondary" onPress={() => router.push('/invite-partner')} /></Surface>}
     {filter === 'Together' && partner && query.isSuccess && <FreeTimeCard block={best} empty={allDay.length > 0 && free.length === 0} />}
     {query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading calendar" />}
-    {query.isError && <><Notice error message="We couldn’t load these dates." /><Button label="Try again" variant="secondary" onPress={() => void query.refetch()} /></>}
+    {query.isError && <><Notice error message="We couldn’t load these dates." /><Button label="Try again" variant="quiet" onPress={() => void query.refetch()} /></>}
     {query.isSuccess && !(filter === 'Partner' && !partner) && <><Text variant="heading" accessibilityRole="header">{format(anchor, 'EEEE, MMMM d')}</Text>{visible.length === 0 ? <Surface><Text variant="heading">{filter === 'Partner' ? 'Nothing on their calendar yet' : filter === 'Together' ? 'No shared plans yet' : 'Your day is clear'}</Text><Text tone="secondary">{filter === 'Mine' ? 'Add a personal or shared event when something comes up.' : 'Plans added to Tandem will appear here.'}</Text>{filter === 'Mine' && <Button label="Add an event" variant="quiet" onPress={() => router.push('/event/new')} />}</Surface> : visible.map((event, index) => <EventCard key={event.id ?? `busy-${event.owner_id}-${event.start_at}-${index}`} event={event} viewerId={userId} ownerName={ownerName(event.owner_id)} />)}</>}
   </Screen>;
 }

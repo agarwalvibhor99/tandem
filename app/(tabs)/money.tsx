@@ -28,8 +28,10 @@ export default function MoneyScreen() {
   const history = useExpenses(selectedView);
   const nameFor = (id: string) => id === userId ? 'You' : members.data?.find((member) => member.user_id === id)?.name ?? 'Partner';
   const shared = selectedView === 'shared';
+  const refreshing = members.isFetching || summary.query.isFetching || history.query.isFetching;
+  const refresh = () => { void members.refetch(); void summary.query.refetch(); void history.query.refetch(); };
 
-  return <Screen title="Money" description="A clear view of what you spend, alone or together.">
+  return <Screen title="Money" description="A clear view of what you spend, alone or together." refreshing={refreshing} onRefresh={refresh}>
     <VisibilitySelector label="Spending" value={selectedView} sharedAvailable={connected} showUnavailableShared sharedLabel="Couple" onChange={setView} />
     <CompactAction icon={Wallet} label="New expense" onPress={() => router.push({ pathname: '/expense/new', params: { visibility: selectedView } })} />
 

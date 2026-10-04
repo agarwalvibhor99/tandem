@@ -33,7 +33,9 @@ export default function RemindersScreen() {
   const upcoming = rows.filter((reminder) => !reminder.completed);
   const completed = rows.filter((reminder) => reminder.completed);
   const pendingId = actions.complete.isPending ? actions.complete.variables?.reminder.id : undefined;
-  return <Screen standalone title="Reminders" description="Small nudges for the things you want to remember.">
+  const refreshing = members.isFetching || couple.isFetching || reminders.query.isFetching;
+  const refresh = () => { void members.refetch(); void couple.refetch(); void reminders.query.refetch(); };
+  return <Screen standalone title="Reminders" description="Small nudges for the things you want to remember." refreshing={refreshing} onRefresh={refresh}>
     <VisibilitySelector label="View" value={selectedView} sharedAvailable={connected} onChange={setView} />
     <CompactAction icon={BellPlus} label="New reminder" onPress={() => router.push({ pathname: '/reminder/new', params: { visibility: selectedView } })} disabled={selectedView === 'shared' && !connected} />
     {params.notifications === 'scheduled' && <Notice message="Reminder saved. This device will alert you at the chosen time." />}
