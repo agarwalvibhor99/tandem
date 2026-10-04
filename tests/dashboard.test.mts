@@ -33,9 +33,9 @@ test('canonical query keys share in-flight work and fresh results', async () => 
   client.clear();
 });
 test('greeting handles missing profiles and daypart boundaries', () => {
-  assert.equal(dashboardGreeting(undefined, 8), 'Good morning');
-  assert.equal(dashboardGreeting('  Sam Rivera ', 11), 'Good morning, Sam');
-  assert.equal(dashboardGreeting('Sam', 12), 'Good afternoon, Sam');
-  assert.equal(dashboardGreeting('Sam', 18), 'Good evening, Sam');
-  assert.equal(dashboardGreeting('   ', 20), 'Good evening');
+  assert.equal(dashboardGreeting(undefined, 8), 'Good morning ✨');
+  assert.equal(dashboardGreeting('  Sam Rivera ', 11), 'Good morning, Sam ✨');
+  assert.equal(dashboardGreeting('Sam', 12), 'Good afternoon, Sam ✨');
+  assert.equal(dashboardGreeting('Sam', 18), 'Good evening, Sam ✨');
+  assert.equal(dashboardGreeting('   ', 20), 'Good evening ✨');
 });

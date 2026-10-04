@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, type PressableProps, type ViewStyle } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 import { colors, layout, radii, spacing } from '@/constants/theme';
@@ -6,10 +6,12 @@ import { colors, layout, radii, spacing } from '@/constants/theme';
 type Props = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   loading?: boolean;
-  variant?: 'primary' | 'secondary' | 'quiet';
+  variant?: 'primary' | 'secondary' | 'quiet' | 'danger' | 'compact';
+  grow?: boolean;
+  style?: ViewStyle;
 };
 
-export function Button({ label, loading = false, variant = 'primary', disabled, ...props }: Props) {
+export function Button({ label, loading = false, variant = 'primary', disabled, grow = false, style, ...props }: Props) {
   const isDisabled = disabled || loading;
 
   return (
@@ -21,19 +23,24 @@ export function Button({ label, loading = false, variant = 'primary', disabled, 
       disabled={isDisabled}
       style={({ pressed }) => [
         styles.button,
+        grow && styles.grow,
         variant === 'secondary' && styles.secondary,
+        variant === 'compact' && styles.compact,
+        variant === 'danger' && styles.danger,
         variant === 'quiet' && styles.quiet,
-        pressed && (variant === 'primary' ? styles.pressed : styles.secondaryPressed),
+        pressed && (variant === 'primary' ? styles.pressed : variant === 'danger' ? styles.dangerPressed : styles.secondaryPressed),
         isDisabled && styles.disabled,
+        style,
       ]}
     >
-      {loading && <ActivityIndicator color={variant === 'primary' ? colors.onAccent : colors.accent} />}
-      <Text variant="label" tone={variant === 'primary' ? 'inverse' : 'accent'}>{label}</Text>
+      {loading && <ActivityIndicator color={variant === 'primary' || variant === 'danger' || variant === 'compact' ? colors.onAccent : colors.accent} />}
+      <Text variant="label" tone={variant === 'primary' || variant === 'danger' || variant === 'compact' ? 'inverse' : 'accent'}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  grow: { flex: 1 },
   button: {
     minHeight: layout.minTouchTarget,
     borderRadius: radii.md,
@@ -47,6 +54,9 @@ const styles = StyleSheet.create({
   },
   secondaryPressed: { opacity: 0.75 },
   secondary: { backgroundColor: colors.accentSoft },
+  compact: { backgroundColor: colors.accent, alignSelf: 'center', paddingHorizontal: spacing.lg },
+  danger: { backgroundColor: colors.error },
+  dangerPressed: { opacity: 0.82 },
   quiet: { backgroundColor: 'transparent', paddingHorizontal: 0, alignSelf: 'flex-start' },
   pressed: { backgroundColor: colors.accentPressed },
   disabled: { opacity: 0.5 },

@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TaskSyncProvider } from '@/providers/task-sync-provider';
 import { ListSyncProvider } from '@/providers/list-sync-provider';
 import { CalendarSyncProvider } from '@/providers/calendar-sync-provider';
+import { CalendarNotificationProvider } from '@/providers/calendar-notification-provider';
 import { ExpenseSyncProvider } from '@/providers/expense-sync-provider';
 import { ReminderNotificationProvider } from '@/providers/reminder-notification-provider';
 import { ReminderSyncProvider } from '@/providers/reminder-sync-provider';
@@ -38,6 +39,7 @@ function AuthenticatedNavigation() {
     <TaskSyncProvider>
     <ListSyncProvider>
     <CalendarSyncProvider>
+    <CalendarNotificationProvider>
     <ExpenseSyncProvider>
     <ReminderNotificationProvider>
     <ReminderSyncProvider>
@@ -65,6 +67,7 @@ function AuthenticatedNavigation() {
     </ReminderSyncProvider>
     </ReminderNotificationProvider>
     </ExpenseSyncProvider>
+    </CalendarNotificationProvider>
     </CalendarSyncProvider>
     </ListSyncProvider>
     </TaskSyncProvider>

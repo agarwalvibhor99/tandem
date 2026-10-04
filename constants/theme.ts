@@ -1,22 +1,22 @@
 import type { TextStyle, ViewStyle } from 'react-native';
 
 export const colors = {
-  background: '#FBF7FA',
-  scrim: '#2D223066',
+  background: '#FAF8F6',
+  scrim: '#2F293366',
   surface: '#FFFFFF',
-  surfaceMuted: '#F1EEF5',
-  surfaceWarm: '#FFF4F7',
-  text: '#2D2230',
-  textSecondary: '#665A68',
-  accent: '#8A4F70',
-  accentPressed: '#6F3B59',
-  accentSoft: '#F4E5EC',
-  partner: '#735A9B',
-  partnerSoft: '#F0EAF7',
-  together: '#B75D7A',
-  togetherSoft: '#F8E8EF',
+  surfaceMuted: '#F1EEEC',
+  surfaceWarm: '#FFFBFA',
+  text: '#2F2933',
+  textSecondary: '#6B626B',
+  accent: '#9B6077',
+  accentPressed: '#7D4A60',
+  accentSoft: '#F3E6EA',
+  partner: '#7C6A9A',
+  partnerSoft: '#EEEAF4',
+  together: '#C07486',
+  togetherSoft: '#F6E8EC',
   onAccent: '#FFFFFF',
-  border: '#E4DDE5',
+  border: '#E5DFDD',
   error: '#AC3434',
   success: '#5E8B72',
   warning: '#9A6A3A',
@@ -46,7 +46,7 @@ export const radii = { sm: 8, md: 16, lg: 24, pill: 999 } as const;
 
 export const shadows = {
   card: {
-    boxShadow: '0px 8px 24px rgba(45, 34, 48, 0.07)',
+    boxShadow: '0px 8px 24px rgba(47, 41, 51, 0.07)',
   },
 } as const satisfies Record<string, ViewStyle>;
 
@@ -56,7 +56,7 @@ export const layout = {
   dashboardTileMinWidth: 144,
   minTouchTarget: 48,
   tabBarHeight: 78,
-  iconSize: 24,
-  featureIconSize: 32,
-  iconContainerSize: 64,
+  iconSize: 20,
+  featureIconSize: 28,
+  iconContainerSize: 56,
 } as const;

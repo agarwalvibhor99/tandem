@@ -4,6 +4,7 @@ import { AssigneeAvatar } from '@/components/tasks/assignee-avatar';
 import { PriorityIndicator } from '@/components/tasks/priority-indicator';
 import { TaskLoader } from '@/components/tasks/task-loader';
 import { Button } from '@/components/ui/button';
+import { ActionPanel } from '@/components/ui/action-panel';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
@@ -37,15 +38,17 @@ function TaskDetail({ task }: { task: Task }) {
       <Text variant="label" tone="accent">{projected.status === 'completed' ? 'Completed' : 'Open'}</Text>
     </Surface>
     {complete.isError && <Notice error message={`${taskErrorMessage(complete.error)} Your change was undone.`} />}
-    <Button label={projected.status === 'completed' ? 'Reopen task' : 'Complete task'} loading={busy} disabled={remove.isPending} onPress={() => complete.mutate({ task, status: projected.status === 'completed' ? 'open' : 'completed' })} />
-    <Button label="Edit task" variant="secondary" disabled={busy || remove.isPending} onPress={() => router.push({ pathname: '/task/[id]/edit', params: { id: task.id } })} />
-    {remove.isError && <Notice error message={taskErrorMessage(remove.error)} />}
-    {confirmDelete ? <Surface>
-      <Text variant="heading">Delete this task?</Text>
-      <Text tone="secondary">{task.visibility === 'shared' ? 'It will be removed for both of you. This can’t be undone.' : 'This can’t be undone.'}</Text>
-      <Button label="Yes, delete task" loading={remove.isPending} disabled={busy} onPress={() => remove.mutate(task, { onSuccess: () => router.replace('/tasks') })} />
-      <Button label="Keep task" variant="secondary" disabled={remove.isPending} onPress={() => setConfirmDelete(false)} />
-    </Surface> : <Button label="Delete task" variant="secondary" disabled={busy} onPress={() => setConfirmDelete(true)} />}
+    <ActionPanel description="Update the task or remove it when it’s no longer needed.">
+      <Button label={projected.status === 'completed' ? 'Reopen task' : 'Complete task'} loading={busy} disabled={remove.isPending} onPress={() => complete.mutate({ task, status: projected.status === 'completed' ? 'open' : 'completed' })} />
+      <Button label="Edit task" variant="secondary" disabled={busy || remove.isPending} onPress={() => router.push({ pathname: '/task/[id]/edit', params: { id: task.id } })} />
+      {remove.isError && <Notice error message={taskErrorMessage(remove.error)} />}
+      {confirmDelete ? <>
+        <Text variant="label">Delete this task?</Text>
+        <Text tone="secondary">{task.visibility === 'shared' ? 'It will be removed for both of you. This can’t be undone.' : 'This can’t be undone.'}</Text>
+        <Button label="Yes, delete task" variant="danger" loading={remove.isPending} disabled={busy} onPress={() => remove.mutate(task, { onSuccess: () => router.replace('/tasks') })} />
+        <Button label="Keep task" variant="secondary" disabled={remove.isPending} onPress={() => setConfirmDelete(false)} />
+      </> : <Button label="Delete task" variant="secondary" disabled={busy} onPress={() => setConfirmDelete(true)} />}
+    </ActionPanel>
   </>;
 }
 export default function TaskDetailScreen() {

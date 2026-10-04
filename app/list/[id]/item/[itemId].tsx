@@ -2,6 +2,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Platform } from 'react-native';
 import { ItemForm } from '@/components/lists/item-form';
+import { ActionPanel } from '@/components/ui/action-panel';
+import { ActionRow } from '@/components/ui/action-row';
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
@@ -24,8 +26,10 @@ export default function EditItemScreen() {
   return <Screen standalone title="Edit item" description={list.data?.name ?? 'Shared list'}>
     {(list.isPending || items.isPending) && <ActivityIndicator color={colors.accent} />}
     {list.data && item && <><ItemForm listId={list.data.id} type={list.data.type} item={item} onSaved={() => router.replace({ pathname: '/list/[id]', params: { id: list.data!.id } })} />
-      {remove.error && <Notice error message={listErrorMessage(remove.error)} />}
-      {confirming ? <><Text>Delete this item for both of you?</Text><Button label="Yes, delete item" loading={remove.isPending} onPress={deleteItem} /><Button variant="secondary" label="Keep item" onPress={() => setConfirming(false)} /></> : <Button variant="secondary" label="Delete item" onPress={requestDelete} />}</>}
+      <ActionPanel description="Use this when the item no longer belongs on the list.">
+        {remove.error && <Notice error message={listErrorMessage(remove.error)} />}
+        {confirming ? <><Text variant="label">Delete this item for both of you?</Text><Text tone="secondary">This removes it from the shared list. This can’t be undone.</Text><ActionRow><Button grow label="Yes, delete item" variant="danger" loading={remove.isPending} onPress={deleteItem} /><Button grow variant="secondary" label="Keep item" onPress={() => setConfirming(false)} /></ActionRow></> : <Button variant="secondary" label="Delete item" onPress={requestDelete} />}
+      </ActionPanel></>}
     {(list.isError || items.isError) && <Notice error message="We couldn’t load this item." />}
     {items.isSuccess && !item && <Text>This item is no longer available.</Text>}
     <Button variant="secondary" label="Back to list" onPress={() => router.back()} />

@@ -6,7 +6,7 @@ import { colors, layout, radii, spacing, typography } from '@/constants/theme';
 
 type Props = TextInputProps & { label: string; error?: string; hint?: string; password?: boolean };
 
-export const FormField = forwardRef<TextInput, Props>(function FormField({ label, error, hint, password = false, style, ...props }, ref) {
+export const FormField = forwardRef<TextInput, Props>(function FormField({ label, error, hint, password = false, style, multiline, ...props }, ref) {
   const id = useId();
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -14,7 +14,7 @@ export const FormField = forwardRef<TextInput, Props>(function FormField({ label
   return (
     <View style={styles.field}>
       <Text variant="label" nativeID={`${id}-label`}>{label}</Text>
-      <View style={[styles.inputContainer, focused && styles.focused, !!error && styles.invalid]}>
+      <View style={[styles.inputContainer, multiline && styles.multilineContainer, focused && styles.focused, !!error && styles.invalid]}>
         <TextInput
           {...props}
           ref={ref}
@@ -27,7 +27,9 @@ export const FormField = forwardRef<TextInput, Props>(function FormField({ label
           selectionColor={colors.accent}
           onFocus={(event) => { setFocused(true); props.onFocus?.(event); }}
           onBlur={(event) => { setFocused(false); props.onBlur?.(event); }}
-          style={[styles.input, style]}
+          multiline={multiline}
+          textAlignVertical={multiline ? 'top' : 'center'}
+          style={[styles.input, multiline && styles.multilineInput, style]}
         />
         {password && (
           <Pressable
@@ -49,9 +51,11 @@ export const FormField = forwardRef<TextInput, Props>(function FormField({ label
 const styles = StyleSheet.create({
   field: { gap: spacing.sm },
   inputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radii.md },
+  multilineContainer: { alignItems: 'flex-start' },
   focused: { borderColor: colors.accent },
   invalid: { borderColor: colors.error },
-  input: { ...typography.body, color: colors.text, flex: 1, minWidth: 0, minHeight: layout.minTouchTarget, padding: spacing.md },
+  input: { ...typography.body, color: colors.text, flex: 1, minWidth: 0, minHeight: layout.minTouchTarget, paddingHorizontal: spacing.md, paddingVertical: 0 },
+  multilineInput: { paddingVertical: spacing.md },
   toggle: { minHeight: layout.minTouchTarget, minWidth: layout.minTouchTarget, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.md },
   error: { color: colors.error },
 });

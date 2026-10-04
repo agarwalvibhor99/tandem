@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { findCalendarConflicts, calendarConflictMessage } from '../lib/calendar/conflicts.ts';
 import { findSharedFreeTime, mostUsefulFreeTime, sharedFreeTimeForEntries } from '../lib/calendar/free-time.ts';
-import { calendarEventSchema } from '../lib/validation/calendar.ts';
+import { createCalendarEventSchema } from '../lib/validation/calendar.ts';
 import { calendarWindow, eventsOnDay, filterCalendar } from '../lib/calendar/view.ts';
 import type { CalendarEntry } from '../types/calendar.ts';
 
@@ -26,10 +27,12 @@ test('empty schedules, invalid blocks and invalid bounds are handled deliberatel
   assert.throws(() => findSharedFreeTime([], [], at(8), at(20), -1), RangeError);
 });
 test('event validation requires ordered times and an actual shared space', () => {
-  const base = { couple_id: null, title: 'Dinner', start_at: at(18).toISOString(), end_at: at(19).toISOString(), visibility: 'private', location: '', notes: '' };
+  const calendarEventSchema = createCalendarEventSchema(at(8));
+  const base = { couple_id: null, title: 'Dinner', start_at: at(18).toISOString(), end_at: at(19).toISOString(), visibility: 'private', location: '', notes: '', reminder_offset_minutes: null };
   assert.equal(calendarEventSchema.safeParse(base).success, true);
   assert.equal(calendarEventSchema.safeParse({ ...base, end_at: at(17).toISOString() }).success, false);
   assert.equal(calendarEventSchema.safeParse({ ...base, visibility: 'shared' }).success, false);
+  assert.equal(calendarEventSchema.safeParse({ ...base, start_at: at(7).toISOString() }).success, false);
 });
 test('calendar month stays within RPC bounds and overlapping midnight events appear on both days', () => {
   const window = calendarWindow(new Date(2026, 9, 3), 'Month');
@@ -54,4 +57,17 @@ test('shared entries block both calendars and longest available stretch wins', (
   const free = sharedFreeTimeForEntries(entries, 'A', 'B', at(9), at(20), 30);
   assert.deepEqual(hours(free), [[9, 12], [14, 16], [17, 20]]);
   assert.deepEqual(mostUsefulFreeTime(free), free[0]);
+});
+test('calendar conflicts match private and shared visibility rules', () => {
+  const entries = [
+    { id: 'mine', owner_id: 'A', visibility: 'private', start_at: at(12).toISOString(), end_at: at(13).toISOString(), title: 'Mine' },
+    { id: 'partner', owner_id: 'B', visibility: 'private', start_at: at(14).toISOString(), end_at: at(15).toISOString(), title: 'Busy' },
+    { id: 'shared', owner_id: 'A', visibility: 'shared', start_at: at(16).toISOString(), end_at: at(17).toISOString(), title: 'Together' },
+  ] as CalendarEntry[];
+  const base = { start_at: at(12, 30).toISOString(), end_at: at(13, 30).toISOString(), visibility: 'private' as const };
+  assert.equal(findCalendarConflicts(base, entries, 'A')[0]?.reason, 'mine');
+  assert.equal(findCalendarConflicts({ ...base, start_at: at(14, 30).toISOString(), end_at: at(15, 30).toISOString() }, entries, 'A').length, 0);
+  assert.equal(findCalendarConflicts({ ...base, start_at: at(16, 30).toISOString(), end_at: at(17, 30).toISOString() }, entries, 'A')[0]?.reason, 'together');
+  assert.equal(findCalendarConflicts({ ...base, visibility: 'shared', start_at: at(14, 30).toISOString(), end_at: at(15, 30).toISOString() }, entries, 'A')[0]?.reason, 'partner');
+  assert.equal(calendarConflictMessage(findCalendarConflicts({ ...base, visibility: 'shared', start_at: at(14, 30).toISOString(), end_at: at(15, 30).toISOString() }, entries, 'A')), 'Your partner is already busy at that time.');
 });

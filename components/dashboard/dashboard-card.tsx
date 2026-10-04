@@ -20,10 +20,10 @@ export function DashboardCard({ title, subtitle, icon: Icon, badge, quiet, compa
   </Surface>;
 }
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surfaceWarm },
+  card: { backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm },
   title: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
   compact: { padding: spacing.lg, gap: spacing.md },
-  quiet: { backgroundColor: colors.surface, boxShadow: 'none' },
+  quiet: { backgroundColor: colors.surfaceWarm, boxShadow: 'none' },
 });

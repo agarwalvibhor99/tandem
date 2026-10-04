@@ -28,6 +28,6 @@ export function QuickActions() {
 }
 const styles = StyleSheet.create({
   section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surfaceWarm, borderWidth: 1, borderColor: colors.border },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   pressed: { backgroundColor: colors.togetherSoft },
 });

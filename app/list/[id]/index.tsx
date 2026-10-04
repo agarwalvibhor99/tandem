@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { ItemForm } from '@/components/lists/item-form';
 import { ListItemRow } from '@/components/lists/list-item-row';
 import { Button } from '@/components/ui/button';
@@ -28,15 +28,14 @@ export default function ListDetailScreen() {
     {list.isError && <><Notice error message="We couldn’t load this list." /><Button label="Try again" onPress={() => void list.refetch()} /></>}
     {list.isSuccess && !list.data && <Surface><Text variant="heading">List unavailable</Text><Text tone="secondary">It may have been removed, or you may no longer have access.</Text></Surface>}
     {list.data && <>
-      <Surface><Text variant="heading">Quick add</Text><ItemForm listId={list.data.id} type={list.data.type} compact onSaved={() => void items.refetch()} /></Surface>
+      <Surface><View style={styles.quickHeader}><Text variant="heading">Quick add</Text><Pressable accessibilityRole="button" accessibilityLabel="Add with details" onPress={() => router.push({ pathname: '/list/[id]/add', params: { id: list.data!.id, details: '1' } })}><Text variant="label" tone="accent">Details</Text></Pressable></View><ItemForm listId={list.data.id} type={list.data.type} compact onSaved={() => void items.refetch()} /></Surface>
       {complete.isError && <Notice error message={listErrorMessage(complete.error)} />}
       {items.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading items" />}
       {items.isError && <><Notice error message="We couldn’t load your items." /><Button label="Try again" onPress={() => void items.refetch()} /></>}
       {items.isSuccess && rows.length === 0 && <Surface><Text variant="heading">Your list is empty</Text><Text tone="secondary">Add the first thing you need. Your partner will see it here too.</Text></Surface>}
       {rows.length > 0 && <Surface><Text variant="heading">To get · {remaining.length}</Text><View style={styles.rows}>{remaining.map(renderRow)}</View>{done.length > 0 && <><Text variant="heading">Done · {done.length}</Text><View style={styles.rows}>{done.map(renderRow)}</View></>}</Surface>}
-      <Button variant="secondary" label="Add with details" onPress={() => router.push({ pathname: '/list/[id]/add', params: { id: list.data!.id } })} />
       {items.data?.length === 500 && <Text variant="caption" tone="secondary">Showing the first 500 items. Check or remove older items to keep this list manageable.</Text>}
     </>}
   </Screen>;
 }
-const styles = StyleSheet.create({ rows: { gap: spacing.xs } });
+const styles = StyleSheet.create({ rows: { gap: spacing.xs }, quickHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md } });
