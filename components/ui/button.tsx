@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   compact: { backgroundColor: colors.accent, alignSelf: 'center', paddingHorizontal: spacing.lg },
   danger: { backgroundColor: colors.error },
   dangerPressed: { opacity: 0.82 },
-  quiet: { backgroundColor: colors.bg, paddingHorizontal: 0, alignSelf: 'flex-start' },
+  quiet: { minHeight: 32, backgroundColor: 'transparent', paddingVertical: spacing.xs, paddingHorizontal: 0, alignSelf: 'flex-start' },
   pressed: { backgroundColor: colors.accentPressed },
   disabled: { backgroundColor: colors.disabled, opacity: 1 },
 });
