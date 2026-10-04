@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm },
   title: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
-  icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
+  icon: { width: layout.iconBadgeSize, height: layout.iconBadgeSize, borderRadius: layout.iconBadgeSize / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
   compact: { padding: spacing.lg, gap: spacing.md },
-  quiet: { backgroundColor: colors.surfaceWarm, boxShadow: 'none' },
+  quiet: { backgroundColor: colors.surfaceWarm },
 });

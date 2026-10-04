@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { CalendarDays, CircleCheck, Ellipsis, ShoppingBasket, Sun, Wallet } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, layout, spacing, typography } from '@/constants/theme';
+import { colors, layout, radii, spacing, typography } from '@/constants/theme';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -16,7 +16,7 @@ export default function TabLayout() {
         tabBarActiveBackgroundColor: colors.togetherSoft,
         tabBarLabelStyle: typography.tab,
         tabBarIconStyle: { marginTop: spacing.xs },
-        tabBarItemStyle: { paddingTop: spacing.xs, paddingBottom: spacing.md, borderRadius: 18, marginVertical: spacing.xs },
+        tabBarItemStyle: { paddingTop: spacing.xs, paddingBottom: spacing.md, borderRadius: radii.md, marginVertical: spacing.xs },
         tabBarStyle: {
           height: layout.tabBarHeight + insets.bottom,
           paddingHorizontal: spacing.sm,

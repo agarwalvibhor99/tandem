@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   button: {
     minHeight: layout.minTouchTarget,
-    borderRadius: radii.md,
+    borderRadius: radii.pill,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     backgroundColor: colors.accent,
@@ -53,11 +53,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   secondaryPressed: { opacity: 0.75 },
-  secondary: { backgroundColor: colors.accentSoft },
+  secondary: { backgroundColor: colors.chip },
   compact: { backgroundColor: colors.accent, alignSelf: 'center', paddingHorizontal: spacing.lg },
   danger: { backgroundColor: colors.error },
   dangerPressed: { opacity: 0.82 },
-  quiet: { backgroundColor: 'transparent', paddingHorizontal: 0, alignSelf: 'flex-start' },
+  quiet: { backgroundColor: colors.bg, paddingHorizontal: 0, alignSelf: 'flex-start' },
   pressed: { backgroundColor: colors.accentPressed },
-  disabled: { opacity: 0.5 },
+  disabled: { backgroundColor: colors.disabled, opacity: 1 },
 });

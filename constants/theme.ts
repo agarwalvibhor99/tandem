@@ -1,25 +1,62 @@
-import type { TextStyle, ViewStyle } from 'react-native';
+import { Appearance, type TextStyle, type ViewStyle } from 'react-native';
+
+const lightTokens = {
+  bg: '#FAF8F7',
+  surface: '#FFFFFF',
+  ink: '#2A2226',
+  muted: '#6B5F66',
+  line: '#E4DBD8',
+  chip: '#F1ECEA',
+  accent: '#84506A',
+  accentInk: '#FFFFFF',
+  accentSoft: '#F3E7ED',
+  disabled: '#D9CFD3',
+  disabledInk: '#8E8087',
+  success: '#3F7D5C',
+  danger: '#B4423A',
+  scrim: '#2A222666',
+} as const;
+
+const darkTokens = {
+  bg: '#1B1719',
+  surface: '#262023',
+  ink: '#F3ECEF',
+  muted: '#B3A6AD',
+  line: '#3A3236',
+  chip: '#2F282C',
+  accent: '#C58AA5',
+  accentInk: '#2A1420',
+  accentSoft: '#3A2630',
+  disabled: '#3A3236',
+  disabledInk: '#86797F',
+  success: '#7CC4A0',
+  danger: '#F08A82',
+  scrim: '#00000099',
+} as const;
+
+export const colorTokens = { light: lightTokens, dark: darkTokens } as const;
+export type ColorScheme = keyof typeof colorTokens;
+export type ColorToken = keyof typeof lightTokens;
+
+const scheme: ColorScheme = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+const tokens = colorTokens[scheme];
 
 export const colors = {
-  background: '#FAF8F6',
-  scrim: '#2F293366',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F1EEEC',
-  surfaceWarm: '#FFFBFA',
-  text: '#2F2933',
-  textSecondary: '#6B626B',
-  accent: '#9B6077',
-  accentPressed: '#7D4A60',
-  accentSoft: '#F3E6EA',
-  partner: '#7C6A9A',
-  partnerSoft: '#EEEAF4',
-  together: '#C07486',
-  togetherSoft: '#F6E8EC',
-  onAccent: '#FFFFFF',
-  border: '#E5DFDD',
-  error: '#AC3434',
-  success: '#5E8B72',
-  warning: '#9A6A3A',
+  ...tokens,
+  background: tokens.bg,
+  surfaceMuted: tokens.chip,
+  surfaceWarm: tokens.surface,
+  text: tokens.ink,
+  textSecondary: tokens.muted,
+  accentPressed: tokens.accent,
+  onAccent: tokens.accentInk,
+  border: tokens.line,
+  error: tokens.danger,
+  warning: tokens.muted,
+  partner: tokens.accent,
+  partnerSoft: tokens.accentSoft,
+  together: tokens.accent,
+  togetherSoft: tokens.accentSoft,
 } as const;
 
 export const spacing = {
@@ -33,20 +70,21 @@ export const spacing = {
 } as const;
 
 export const typography = {
-  display: { fontSize: 36, lineHeight: 44, fontWeight: '700', letterSpacing: -1 },
-  title: { fontSize: 24, lineHeight: 32, fontWeight: '600', letterSpacing: -0.4 },
-  heading: { fontSize: 18, lineHeight: 26, fontWeight: '600' },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' },
-  label: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  caption: { fontSize: 13, lineHeight: 20, fontWeight: '400' },
-  tab: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
+  display: { fontSize: 36, lineHeight: 44, fontWeight: '700', letterSpacing: -1, fontFamily: 'Bricolage Grotesque, System' },
+  title: { fontSize: 24, lineHeight: 32, fontWeight: '600', letterSpacing: -0.4, fontFamily: 'Bricolage Grotesque, System' },
+  heading: { fontSize: 18, lineHeight: 26, fontWeight: '600', fontFamily: 'Figtree, System' },
+  body: { fontSize: 16, lineHeight: 24, fontWeight: '400', fontFamily: 'Figtree, System' },
+  label: { fontSize: 14, lineHeight: 20, fontWeight: '600', fontFamily: 'Figtree, System' },
+  caption: { fontSize: 13, lineHeight: 20, fontWeight: '400', fontFamily: 'Figtree, System' },
+  tab: { fontSize: 12, lineHeight: 16, fontWeight: '600', fontFamily: 'Figtree, System' },
+  money: { fontSize: 64, lineHeight: 76, fontWeight: '700', letterSpacing: -2, fontFamily: 'Bricolage Grotesque, System', fontVariant: ['tabular-nums'] },
 } as const satisfies Record<string, TextStyle>;
 
-export const radii = { sm: 8, md: 16, lg: 24, pill: 999 } as const;
+export const radii = { sm: 8, md: 16, lg: 22, xl: 24, pill: 999 } as const;
 
 export const shadows = {
   card: {
-    boxShadow: '0px 8px 24px rgba(47, 41, 51, 0.07)',
+    boxShadow: 'none',
   },
 } as const satisfies Record<string, ViewStyle>;
 
@@ -54,9 +92,15 @@ export const layout = {
   contentMaxWidth: 640,
   dialogMaxWidth: 420,
   dashboardTileMinWidth: 144,
-  minTouchTarget: 48,
+  minTouchTarget: 44,
   tabBarHeight: 78,
   iconSize: 20,
   featureIconSize: 28,
   iconContainerSize: 56,
+  iconBadgeSize: 36,
+  avatarSize: 36,
+  emojiSize: 22,
+  emojiLineHeight: 28,
+  pageMargin: 20,
+  fieldGap: 26,
 } as const;

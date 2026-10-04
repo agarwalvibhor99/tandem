@@ -58,13 +58,13 @@ export default function MoreScreen() {
       </Pressable>
     }>
       <Surface>
-        <Text variant="title" accessibilityRole="header">Everyday</Text>
+        <Text variant="title" accessibilityRole="header">Settings and spaces</Text>
         <View style={styles.rows}>
+          <ConnectionCard compact />
           <MoreRow title="Reminders" description="Private or shared nudges" icon={Bell} onPress={() => router.push('/reminders')} />
           <MoreRow title="Date ideas" description="Saved plans and date planner" icon={Coffee} onPress={() => router.push('/dates')} />
         </View>
       </Surface>
-      <ConnectionCard compact />
       <Modal visible={accountOpen} transparent animationType="fade" onRequestClose={() => setAccountOpen(false)}>
         <View style={styles.backdrop}>
           <Surface>

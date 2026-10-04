@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { ChoiceChips } from '@/components/ui/choice-chips';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormField } from '@/components/ui/form-field';
+import { IconTile } from '@/components/ui/icon-tile';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
-import { colors, radii, spacing, typography } from '@/constants/theme';
+import { colors, layout, radii, spacing, typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCurrentCouple } from '@/hooks/use-current-couple';
@@ -103,10 +104,7 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
       <Text variant="label">Category</Text>
       <View style={styles.tileGrid}>{expenseCategories.map((category) => {
         const selected = field.value === category;
-        return <Pressable key={category} accessibilityRole="button" accessibilityLabel={category} accessibilityState={{ selected }} onPress={() => field.onChange(category)} style={[styles.categoryTile, selected && styles.categoryTileSelected]}>
-          <Text style={styles.categoryEmoji}>{categoryEmoji[category]}</Text>
-          <Text variant="caption" tone={selected ? 'inverse' : 'default'}>{category === 'Entertainment' ? 'Fun' : category === 'Transportation' ? 'Transport' : category}</Text>
-        </Pressable>;
+        return <IconTile key={category} icon={categoryEmoji[category]} label={category === 'Entertainment' ? 'Fun' : category === 'Transportation' ? 'Transport' : category} selected={selected} onPress={() => field.onChange(category)} />;
       })}</View>
     </View>} />
     <Controller control={form.control} name="visibility" render={({ field }) => <View style={styles.section}>
@@ -136,18 +134,15 @@ const styles = StyleSheet.create({
   error: { color: colors.error },
   section: { gap: spacing.sm },
   tileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  categoryTile: { width: '23%', minWidth: 86, minHeight: 78, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', gap: spacing.xs, padding: spacing.sm },
-  categoryTileSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
-  categoryEmoji: { fontSize: 22, lineHeight: 28 },
   segment: { flexDirection: 'row', padding: spacing.xs, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, gap: spacing.xs },
   segmentItem: { flex: 1, minHeight: 44, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center' },
   segmentSelected: { backgroundColor: colors.accent },
   disabled: { opacity: 0.45 },
-  panel: { gap: spacing.lg, padding: spacing.lg, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  panel: { gap: spacing.lg, padding: spacing.lg, borderRadius: radii.lg, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   peopleRow: { flexDirection: 'row', gap: spacing.sm },
   personCard: { flex: 1, minHeight: 64, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md },
   personSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  avatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceMuted },
+  avatar: { width: layout.avatarSize, height: layout.avatarSize, borderRadius: layout.avatarSize / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceMuted },
   avatarSelected: { backgroundColor: colors.accent },
   custom: { gap: spacing.md, padding: spacing.lg, backgroundColor: colors.surfaceMuted, borderRadius: radii.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

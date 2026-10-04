@@ -35,20 +35,21 @@ export function Screen({ title, description, standalone = false, eyebrow = 'Tand
       <Head><title>{pageTitle ?? title} · Tandem</title></Head>
       <KeyboardAvoidingView style={styles.keyboard} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, onRefresh && styles.refreshableScrollContent]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} /> : undefined}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
+        refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} progressViewOffset={0} /> : undefined}
       >
         <View style={[styles.content, featurePage && styles.featureContent]}>
           {featurePage ? <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.canGoBack() ? router.back() : router.replace(backDestination)} style={styles.back}>
             <ArrowLeft color={colors.accent} size={layout.iconSize} strokeWidth={1.75} />
-            <Text variant="label" tone="accent">Back</Text>
           </Pressable> : <View style={styles.eyebrow}><PairedMark /><Text variant="label" tone="accent">{eyebrow}</Text></View>}
           <View style={styles.headerRow}>
             <View style={styles.header}>
               <Text variant={featurePage ? 'title' : 'display'} accessibilityRole="header">{title}</Text>
-              <Text variant={featurePage ? 'caption' : 'body'} tone="secondary">{description}</Text>
+              {description ? <Text variant={featurePage ? 'caption' : 'body'} tone="secondary">{description}</Text> : null}
             </View>
             {(headerAction || onRefresh) && <View style={styles.headerActions}>
               {onRefresh ? <Pressable accessibilityRole="button" accessibilityLabel={`Refresh ${title}`} accessibilityState={{ busy: refreshing }} disabled={refreshing} onPress={onRefresh} style={({ pressed }) => [styles.iconButton, pressed && styles.pressed, refreshing && styles.disabled]}>
@@ -68,7 +69,8 @@ export function Screen({ title, description, standalone = false, eyebrow = 'Tand
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   keyboard: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.xxxl },
+  scrollContent: { flexGrow: 1, justifyContent: 'flex-start', paddingHorizontal: layout.pageMargin, paddingTop: spacing.xl, paddingBottom: spacing.xxxl },
+  refreshableScrollContent: { paddingTop: spacing.lg },
   content: {
     width: '100%',
     maxWidth: layout.contentMaxWidth,
@@ -77,11 +79,11 @@ const styles = StyleSheet.create({
   },
   featureContent: { gap: spacing.lg },
   eyebrow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: spacing.sm, minHeight: layout.minTouchTarget, paddingRight: spacing.lg },
+  back: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: layout.minTouchTarget / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.chip },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   header: { flex: 1, gap: spacing.sm },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  iconButton: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: layout.minTouchTarget / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
+  iconButton: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: layout.minTouchTarget / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.chip },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.6 },
 });

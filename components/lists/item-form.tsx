@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ChoiceChips } from '@/components/ui/choice-chips';
 import { CounterControl } from '@/components/ui/counter-control';
 import { FormField } from '@/components/ui/form-field';
+import { IconTile } from '@/components/ui/icon-tile';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
 import { colors, radii, spacing } from '@/constants/theme';
@@ -97,10 +98,7 @@ export function ItemForm({ listId, type, item, onSaved, compact = false, initial
         <View style={styles.categoryGrid}>
           {groceryCategories.map((category) => {
             const selected = field.value === category;
-            return <Pressable key={category} accessibilityRole="button" accessibilityLabel={category} accessibilityState={{ selected }} onPress={() => field.onChange(selected ? null : category)} style={[styles.categoryTile, selected && styles.categoryTileSelected]}>
-              <Text style={styles.categoryEmoji}>{categoryEmoji[category]}</Text>
-              <Text variant="caption" tone={selected ? 'inverse' : 'default'}>{category}</Text>
-            </Pressable>;
+            return <IconTile key={category} icon={categoryEmoji[category]} label={category} selected={selected} onPress={() => field.onChange(selected ? null : category)} />;
           })}
         </View>
       </View>} />}
@@ -123,7 +121,4 @@ const styles = StyleSheet.create({
   softChip: { minHeight: 40, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.md, justifyContent: 'center' },
   softChipSelected: { backgroundColor: colors.accent },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  categoryTile: { width: '23%', minWidth: 86, minHeight: 74, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', gap: spacing.xs, padding: spacing.sm },
-  categoryTileSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
-  categoryEmoji: { fontSize: 22, lineHeight: 28 },
 });
