@@ -6,12 +6,12 @@ import { colors, layout, radii, spacing } from '@/constants/theme';
 
 type Action = { label: string; icon: LucideIcon; href: '/task/new' | '/lists' | '/event/new' | '/expense/new' | '/reminder/new' | '/date/new' };
 const actions: Action[] = [
-  { label: 'Add Task', icon: Plus, href: '/task/new' },
-  { label: 'Add Event', icon: CalendarPlus, href: '/event/new' },
-  { label: 'Add Expense', icon: Wallet, href: '/expense/new' },
+  { label: 'New task', icon: Plus, href: '/task/new' },
+  { label: 'Plan time', icon: CalendarPlus, href: '/event/new' },
+  { label: 'Log spend', icon: Wallet, href: '/expense/new' },
   { label: 'Groceries', icon: ListPlus, href: '/lists' },
-  { label: 'Add Reminder', icon: Bell, href: '/reminder/new' },
-  { label: 'Save Date Idea', icon: Coffee, href: '/date/new' },
+  { label: 'Reminder', icon: Bell, href: '/reminder/new' },
+  { label: 'Date idea', icon: Coffee, href: '/date/new' },
 ];
 export function QuickActions() {
   return <View style={styles.section}>
@@ -28,6 +28,6 @@ export function QuickActions() {
 }
 const styles = StyleSheet.create({
   section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  pressed: { backgroundColor: colors.accentSoft },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surfaceWarm, borderWidth: 1, borderColor: colors.border },
+  pressed: { backgroundColor: colors.togetherSoft },
 });

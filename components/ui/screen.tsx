@@ -6,6 +6,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, RefreshCo
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/text';
+import { PairedMark } from '@/components/ui/paired-mark';
 import { colors, layout, spacing } from '@/constants/theme';
 
 type Props = PropsWithChildren<{
@@ -43,7 +44,7 @@ export function Screen({ title, description, standalone = false, eyebrow = 'Tand
           {featurePage ? <Pressable accessibilityRole="button" accessibilityLabel="Go back" onPress={() => router.canGoBack() ? router.back() : router.replace(backDestination)} style={styles.back}>
             <ArrowLeft color={colors.accent} size={layout.iconSize} strokeWidth={1.75} />
             <Text variant="label" tone="accent">Back</Text>
-          </Pressable> : <Text variant="label" tone="accent">{eyebrow}</Text>}
+          </Pressable> : <View style={styles.eyebrow}><PairedMark /><Text variant="label" tone="accent">{eyebrow}</Text></View>}
           <View style={styles.headerRow}>
             <View style={styles.header}>
               <Text variant={featurePage ? 'title' : 'display'} accessibilityRole="header">{title}</Text>
@@ -75,6 +76,7 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
   },
   featureContent: { gap: spacing.lg },
+  eyebrow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: spacing.sm, minHeight: layout.minTouchTarget, paddingRight: spacing.lg },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   header: { flex: 1, gap: spacing.sm },

@@ -1,20 +1,25 @@
 import type { TextStyle, ViewStyle } from 'react-native';
 
 export const colors = {
-  background: '#F7F8F4',
-  scrim: '#20372E66',
+  background: '#FBF7FA',
+  scrim: '#2D223066',
   surface: '#FFFFFF',
-  surfaceMuted: '#EDF1E9',
-  text: '#20372E',
-  textSecondary: '#53645B',
-  accent: '#28624D',
-  accentPressed: '#1C4938',
-  accentSoft: '#E3EEE5',
+  surfaceMuted: '#F1EEF5',
+  surfaceWarm: '#FFF4F7',
+  text: '#2D2230',
+  textSecondary: '#665A68',
+  accent: '#8A4F70',
+  accentPressed: '#6F3B59',
+  accentSoft: '#F4E5EC',
+  partner: '#735A9B',
+  partnerSoft: '#F0EAF7',
+  together: '#B75D7A',
+  togetherSoft: '#F8E8EF',
   onAccent: '#FFFFFF',
-  border: '#DCE3D8',
+  border: '#E4DDE5',
   error: '#AC3434',
-  success: '#28624D',
-  warning: '#855918',
+  success: '#5E8B72',
+  warning: '#9A6A3A',
 } as const;
 
 export const spacing = {
@@ -41,7 +46,7 @@ export const radii = { sm: 8, md: 16, lg: 24, pill: 999 } as const;
 
 export const shadows = {
   card: {
-    boxShadow: '0px 2px 10px rgba(32, 55, 46, 0.05)',
+    boxShadow: '0px 8px 24px rgba(45, 34, 48, 0.07)',
   },
 } as const satisfies Record<string, ViewStyle>;
 
@@ -50,7 +55,7 @@ export const layout = {
   dialogMaxWidth: 420,
   dashboardTileMinWidth: 144,
   minTouchTarget: 48,
-  tabBarHeight: 64,
+  tabBarHeight: 78,
   iconSize: 24,
   featureIconSize: 32,
   iconContainerSize: 64,
