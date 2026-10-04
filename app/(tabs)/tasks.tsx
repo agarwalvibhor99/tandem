@@ -40,7 +40,7 @@ export default function TasksScreen() {
   const rows = projectTaskList(tasks.data?.pages.flat() ?? [], pending, filter, userId, tomorrow);
   const pendingIds = new Set(pending.map(({ task }) => task.id));
   return <Screen title="Tasks" description="A little less on your mind. One thing at a time.">
-    <CompactAction icon={Plus} label="New task" description="Personal, shared, or assigned" onPress={() => router.push('/task/new')} />
+    <CompactAction icon={Plus} label="New task" onPress={() => router.push('/task/new')} />
     <TaskFilterTabs value={filter} onChange={setFilter} />
     <Text tone="secondary">{explanations[filter]}</Text>
     {!healthy && <Text variant="caption" tone="secondary">Live updates are reconnecting. Your list also refreshes periodically.</Text>}
@@ -54,8 +54,8 @@ export default function TasksScreen() {
         {filter === 'Partner' && (members.data?.length ?? 0) < 2 && <Button label={couple.data ? 'Invite your partner' : 'Connect your partner'} variant="secondary" onPress={() => router.push(couple.data ? '/invite-partner' : '/create-space')} />}
       </Surface>}
     </>}
-    {tasks.hasNextPage && <Button label="Load more" variant="secondary" loading={tasks.isFetchingNextPage} onPress={() => void tasks.fetchNextPage()} />}
-    <Button label="Refresh tasks" variant="secondary" loading={tasks.isFetching && !tasks.isFetchingNextPage} onPress={() => void tasks.refetch()} />
+    {tasks.hasNextPage && <Button label="Load more" variant="quiet" loading={tasks.isFetchingNextPage} onPress={() => void tasks.fetchNextPage()} />}
+    <Button label="Refresh tasks" variant="quiet" loading={tasks.isFetching && !tasks.isFetchingNextPage} onPress={() => void tasks.refetch()} />
   </Screen>;
 }
 const styles = StyleSheet.create({ list: { gap: spacing.md } });

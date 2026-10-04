@@ -1,7 +1,7 @@
 import Head from 'expo-router/head';
 import { router, usePathname } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,9 +14,10 @@ type Props = PropsWithChildren<{
   standalone?: boolean;
   eyebrow?: string;
   pageTitle?: string;
+  headerAction?: ReactNode;
 }>;
 
-export function Screen({ title, description, standalone = false, eyebrow = 'Tandem', pageTitle, children }: Props) {
+export function Screen({ title, description, standalone = false, eyebrow = 'Tandem', pageTitle, headerAction, children }: Props) {
   const pathname = usePathname();
   const featurePage = standalone && !['/', '/welcome', '/login', '/sign-up'].includes(pathname);
   const backDestination = pathname.startsWith('/task') ? '/tasks' as const
@@ -36,9 +37,12 @@ export function Screen({ title, description, standalone = false, eyebrow = 'Tand
             <ArrowLeft color={colors.accent} size={layout.iconSize} strokeWidth={1.75} />
             <Text variant="label" tone="accent">Back</Text>
           </Pressable> : <Text variant="label" tone="accent">{eyebrow}</Text>}
-          <View style={styles.header}>
-            <Text variant={featurePage ? 'title' : 'display'} accessibilityRole="header">{title}</Text>
-            <Text variant={featurePage ? 'caption' : 'body'} tone="secondary">{description}</Text>
+          <View style={styles.headerRow}>
+            <View style={styles.header}>
+              <Text variant={featurePage ? 'title' : 'display'} accessibilityRole="header">{title}</Text>
+              <Text variant={featurePage ? 'caption' : 'body'} tone="secondary">{description}</Text>
+            </View>
+            {headerAction}
           </View>
           {children}
         </View>
@@ -60,5 +64,6 @@ const styles = StyleSheet.create({
   },
   featureContent: { gap: spacing.lg },
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: spacing.sm, minHeight: layout.minTouchTarget, paddingRight: spacing.lg },
-  header: { gap: spacing.sm },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
+  header: { flex: 1, gap: spacing.sm },
 });

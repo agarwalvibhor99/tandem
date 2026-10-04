@@ -52,7 +52,6 @@ function AuthenticatedNavigation() {
         <Stack.Screen name="task" />
         <Stack.Screen name="list" />
         <Stack.Screen name="event" />
-        <Stack.Screen name="money" />
         <Stack.Screen name="expense" />
         <Stack.Screen name="reminders" />
         <Stack.Screen name="reminder" />

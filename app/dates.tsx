@@ -37,8 +37,8 @@ export default function DatesScreen() {
     {ideas.couple.isSuccess && !connected && <Surface><Text variant="heading">Start collecting ideas together</Text><Text tone="secondary">Create your shared space to save places and plans you’d both like to try.</Text><Button label="Create your shared space" onPress={() => router.push('/create-space')} /></Surface>}
     {connected && <>
       <View style={styles.actions}>
-        <CompactAction icon={Coffee} label="Save idea" description="A place or plan to try" onPress={() => router.push('/date/new')} />
-        <CompactAction icon={CalendarSearch} label="Plan date" description="Match ideas with free time" onPress={() => router.push('/date-planner')} />
+        <CompactAction icon={Coffee} label="Save idea" onPress={() => router.push('/date/new')} />
+        <CompactAction icon={CalendarSearch} label="Plan date" onPress={() => router.push('/date-planner')} />
       </View>
       <ChoiceChips label="Show" value={status} options={[{ value: 'all', label: 'All' }, ...dateStatuses.map((value) => ({ value, label: dateStatusLabel[value] }))]} onChange={chooseStatus} />
       <Button label={filtersOpen ? 'Hide filters' : 'Filter ideas'} variant="quiet" accessibilityState={{ expanded: filtersOpen }} onPress={() => setFiltersOpen(!filtersOpen)} />
@@ -48,13 +48,13 @@ export default function DatesScreen() {
         <ChoiceChips label="Time needed" value={duration} options={[{ value: 'any', label: 'Any' }, { value: 'short', label: '90 min or less' }, { value: 'medium', label: '90 min–3 hr' }, { value: 'long', label: 'Over 3 hr' }]} onChange={chooseDuration} />
       </Surface>}
       {ideas.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading date ideas" />}
-      {ideas.query.isError && <><Notice error message="We couldn’t load your date ideas." /><Button label="Try again" onPress={() => void ideas.query.refetch()} /></>}
+      {ideas.query.isError && <><Notice error message="We couldn’t load your date ideas." /><Button label="Try again" variant="quiet" onPress={() => void ideas.query.refetch()} /></>}
       {setStatus.error && <Notice error message={dateIdeaErrorMessage(setStatus.error)} />}
       {ideas.query.isSuccess && !ideas.query.data.length && <Surface><Text variant="heading">Your next favorite thing starts here</Text><Text tone="secondary">Save a restaurant, a walk, a movie, or a little plan at home. You can decide when to go later.</Text><Button label="Save your first idea" variant="quiet" onPress={() => router.push('/date/new')} /></Surface>}
-      {ideas.query.isSuccess && !!ideas.query.data.length && !rows.length && <Surface><Text variant="heading">No ideas match these filters</Text><Text tone="secondary">Try a different budget, duration, category, or status.</Text><Button label="Show all ideas" variant="secondary" onPress={() => { chooseStatus('all'); chooseCategory('any'); chooseCost('any'); chooseDuration('any'); }} /></Surface>}
+      {ideas.query.isSuccess && !!ideas.query.data.length && !rows.length && <Surface><Text variant="heading">No ideas match these filters</Text><Text tone="secondary">Try a different budget, duration, category, or status.</Text><Button label="Show all ideas" variant="quiet" onPress={() => { chooseStatus('all'); chooseCategory('any'); chooseCost('any'); chooseDuration('any'); }} /></Surface>}
       {rows.map((idea) => <DateIdeaCard key={idea.id} idea={idea} saving={setStatus.isPending && setStatus.variables?.idea.id === idea.id} onDone={idea.status === 'done' ? undefined : () => setStatus.mutate({ idea, status: 'done' })} />)}
       {ideas.query.isSuccess && ideas.query.data.length === 200 && <Text variant="caption" tone="secondary">Showing the 200 most recently saved ideas.</Text>}
     </>}
   </Screen>;
 }
-const styles = StyleSheet.create({ actions: { gap: spacing.sm } });
+const styles = StyleSheet.create({ actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm } });

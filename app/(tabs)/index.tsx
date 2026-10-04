@@ -27,6 +27,6 @@ export default function TodayScreen() {
     {couple.data && (dashboard.reminders.query.data?.length || dashboard.reminders.query.isError) ? <UpcomingRemindersCard reminders={dashboard.reminders.query.data} loading={dashboard.reminders.query.isPending} error={dashboard.reminders.query.isError} onRetry={() => void dashboard.reminders.query.refetch()} /> : null}
     {couple.data && (dashboard.suggestedDate || dashboard.dateIdeas.query.isError) ? <DateIdeaSuggestionCard idea={dashboard.suggestedDate} freeBlock={dashboard.suggestedDateFreeBlock} loading={dashboard.dateIdeas.query.isPending} error={dashboard.dateIdeas.query.isError} onRetry={() => void dashboard.dateIdeas.query.refetch()} /> : null}
     {(dashboard.upcomingTasks.length > 0 || upcoming.isError) && <DashboardTasksCard section="upcoming" tasks={dashboard.upcomingTasks} loading={upcoming.isPending} error={upcoming.isError} onRetry={() => void upcoming.refetch()} {...taskProps} />}
-    <Button label="Refresh Today" variant="secondary" loading={dashboard.refreshing} onPress={() => void dashboard.refresh()} />
+    <Button label="Refresh Today" variant="quiet" loading={dashboard.refreshing} onPress={() => void dashboard.refresh()} />
   </Screen>;
 }

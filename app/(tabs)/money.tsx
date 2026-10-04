@@ -29,15 +29,15 @@ export default function MoneyScreen() {
   const nameFor = (id: string) => id === userId ? 'You' : members.data?.find((member) => member.user_id === id)?.name ?? 'Partner';
   const shared = selectedView === 'shared';
 
-  return <Screen standalone title="Money" description="A clear view of what you spend, alone or together.">
+  return <Screen title="Money" description="A clear view of what you spend, alone or together.">
     <VisibilitySelector label="Spending" value={selectedView} sharedAvailable={connected} showUnavailableShared sharedLabel="Couple" onChange={setView} />
-    <CompactAction icon={Wallet} label="New expense" description={shared ? 'Add couple spending' : 'Add personal spending'} onPress={() => router.push({ pathname: '/expense/new', params: { visibility: selectedView } })} />
+    <CompactAction icon={Wallet} label="New expense" onPress={() => router.push({ pathname: '/expense/new', params: { visibility: selectedView } })} />
 
     {!connected && !members.isPending && !members.isError && <Notice message="Your spending is private. Connect your partner to track couple spending." />}
     {summary.query.isError && <Notice error message="We couldn’t load this month’s spending." />}
     <Surface>
       <Text variant="label" tone="accent">{shared ? 'Couple spending' : 'Personal spending'} · This month</Text>
-      {summary.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading spending summary" /> : summary.query.isError ? <Button label="Try again" variant="secondary" onPress={() => void summary.query.refetch()} /> : <Text variant="title">{money(summary.query.data?.totalAmount ?? 0)}</Text>}
+      {summary.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading spending summary" /> : summary.query.isError ? <Button label="Try again" variant="quiet" onPress={() => void summary.query.refetch()} /> : <Text variant="title">{money(summary.query.data?.totalAmount ?? 0)}</Text>}
       {shared && !!summary.query.data?.members.length && <View style={styles.breakdown}>
         {summary.query.data.members.map((member) => <View key={member.user_id} style={styles.member}>
           <Text variant="label">{nameFor(member.user_id)}</Text>
@@ -50,7 +50,7 @@ export default function MoneyScreen() {
     <View style={styles.history}>
       <Text variant="heading" accessibilityRole="header">Recent expenses</Text>
       {history.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading expenses" />}
-      {history.query.isError && <><Notice error message="We couldn’t load your expenses." /><Button label="Try again" variant="secondary" onPress={() => void history.query.refetch()} /></>}
+      {history.query.isError && <><Notice error message="We couldn’t load your expenses." /><Button label="Try again" variant="quiet" onPress={() => void history.query.refetch()} /></>}
       {history.query.isSuccess && history.query.data.length === 0 && <Surface><Text variant="heading">Nothing recorded yet</Text><Text tone="secondary">Add your first {shared ? 'couple' : 'personal'} expense to see it here.</Text></Surface>}
       {history.query.data?.map((expense) => <Pressable key={expense.id} accessibilityRole="button" accessibilityLabel={`${expense.title}, ${money(expense.amount, expense.currency)}`} onPress={() => router.push({ pathname: '/expense/[id]', params: { id: expense.id } })} style={styles.expense}>
         <View style={styles.expenseCopy}><Text variant="label">{expense.title}</Text><Text variant="caption" tone="secondary">{expense.category} · {format(parseISO(expense.expense_date), 'MMM d')}</Text></View>
