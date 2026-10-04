@@ -12,7 +12,7 @@ export function TaskCard({ task, name, pending, onToggle }: { task: Task; name: 
     <TaskCheckbox title={task.title} completed={task.status === 'completed'} pending={pending} onPress={onToggle} />
     <Pressable accessibilityRole="button" accessibilityLabel={`Open ${task.title}`} onPress={() => router.push({ pathname: '/task/[id]', params: { id: task.id } })} style={styles.content}>
       <Text variant="heading" style={task.status === 'completed' ? styles.completed : undefined}>{task.title}</Text>
-      <View style={styles.meta}><Text variant="caption" tone="secondary">{task.visibility === 'private' ? 'Private · Only you' : 'Shared'}</Text><Text variant="caption" tone="secondary">{dueDateLabel(task.due_at)}</Text></View>
+      <View style={styles.meta}><Text variant="caption" tone="secondary">{task.visibility === 'private' ? 'Personal · Only you' : 'Shared'}</Text><Text variant="caption" tone="secondary">{dueDateLabel(task.due_at)}</Text></View>
       <View style={styles.meta}><AssigneeAvatar name={name} />{task.priority !== 'normal' && <PriorityIndicator priority={task.priority} />}</View>
       {pending && <Text variant="caption" tone="secondary" accessibilityLiveRegion="polite">Saving…</Text>}
     </Pressable>

@@ -20,7 +20,6 @@ export default function EventDetailScreen() {
   const deleting = () => { if (event.data) remove.mutate(event.data, { onSuccess: () => router.replace('/calendar') }); };
   const requestDelete = () => { if (Platform.OS === 'web') setConfirming(true); else Alert.alert('Delete event?', 'This removes it from the calendar.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: deleting }]); };
   return <Screen standalone title={event.data?.title ?? 'Event'} description={event.data?.visibility === 'shared' ? 'Shared plan' : 'Only you can see the details'}>
-    <Button label="Back to calendar" variant="secondary" onPress={() => router.replace('/calendar')} />
     {event.isPending && <ActivityIndicator color={colors.accent} />}
     {event.isError && <Notice error message="We couldn’t load this event." />}
     {event.isSuccess && !event.data && <Surface><Text variant="heading">Event unavailable</Text><Text tone="secondary">It may have been removed, or you may no longer have access.</Text></Surface>}

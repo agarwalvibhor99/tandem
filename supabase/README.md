@@ -258,6 +258,41 @@ optimistic success/failure, and the real Supabase Realtime SDK against an
 in-memory WebSocket transport (private topics, refresh batching, channel errors,
 and cleanup). Existing auth/connection tests remain included.
 
+## Reminders
+
+### Apply the backend migration
+
+After the expenses migrations, open the same development Supabase project and
+run `migrations/20261003000700_reminders.sql` once in SQL Editor. It creates the
+reminders table, indexes, RLS policies, validation triggers, and private
+Realtime broadcast authorization. Do not rerun earlier migrations.
+
+Reminder rows are private by default. A shared reminder must belong to a couple;
+the database verifies that the creator and optional assignee are current couple
+members. Private rows have no couple or assignee, and a partner can never read
+them. Realtime messages contain only a refresh signal, so clients must pass RLS
+again before receiving reminder data. `supabase/tests/reminders.sql` exercises
+owner visibility, partner visibility, invalid assignment, unrelated-user
+isolation, and anonymous denial against a disposable database.
+
+### Notifications and recurrence
+
+Tandem asks for notification permission only when the user saves a reminder and
+never on app startup. One-time reminders are scheduled for their selected time;
+daily, weekly, and monthly reminders reuse that local time. Monthly reminders
+created on the 29th, 30th, or 31st use day 28 so they remain valid in every
+month. The Today card calculates the next upcoming occurrence for repeating
+reminders, including reminders whose original start date has passed. Completed
+reminders are cancelled. Alerts are tagged to the signed-in account on the
+device, so signing out or switching accounts removes that account's pending
+reminder alerts. The app caps scheduled reminders at 100 and reconciles them
+when the app is opened or returns to the foreground.
+
+Local notifications can be tested in Expo Go as well as a development build or
+standalone app. The web build supports creating and completing reminders, but
+browser notifications are intentionally not scheduled in this phase. Remote
+push notifications are outside this phase.
+
 `supabase/tests/tasks.sql` runs on a disposable/development database after all
 migrations, using A and B in one space and unrelated C. It checks private reads,
 updates and deletion, shared editing/completion/reopening/deletion, assignment,
@@ -351,3 +386,25 @@ gaps of at least 30 minutes. Today shows the longest remaining gap between
 the card explicitly notes that its result is based on events added to Tandem.
 An external provider can later be added behind the calendar service as another
 source of busy intervals without changing the UI or weakening event RLS.
+## Shared expenses
+
+`20261003000500_expenses.sql` adds the original shared expense tables and exact split rows. Apply `20261003000600_expense_visibility.sql` after it to add personal/shared scope. Existing records remain shared. Personal records have no couple ID and are readable only by their creator; shared records require both couple members and retain the split and balance behavior. Both migrations expose create, update, delete, and monthly summary operations through validated RPCs. Expense Realtime messages contain only an empty invalidation signal; the app refetches the rows through RLS.
+
+The app stores money as `numeric(12,2)` in Postgres and calculates with integer cents on the client. “One person pays” assigns the full share to the selected payer and a zero share to the other member; 50/50 and custom modes preserve the corresponding split amounts.
+
+## Date ideas and planner
+
+After applying the previous migrations, run `migrations/20261003000800_date_ideas.sql`
+once in the same Supabase project. It adds a couple-owned date idea backlog,
+server constraints, RLS, and a private Realtime refresh signal. Both current
+members can read and update ideas. Unrelated accounts cannot read or write
+them, and direct deletion is not exposed. The creator field is cleared if its
+Auth account is removed, preserving the shared idea for the remaining member.
+
+The planner reads a selected Tandem calendar window, uses only busy times from
+the existing privacy-safe calendar RPC, and filters saved ideas by budget,
+category, mood, duration, and status. It never treats private event titles as
+planning data. It does not reserve a slot or create a calendar event; that
+action would need a separate explicit planning flow. Availability excludes
+external calendars and travel time. `supabase/tests/date_ideas.sql` tests the
+policies in a disposable database and rolls back its test records.

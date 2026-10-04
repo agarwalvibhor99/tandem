@@ -24,7 +24,6 @@ export default function ListDetailScreen() {
   const done = rows.filter(({ completed }) => completed);
   const renderRow = ({ item, completed }: { item: ListItem; completed: boolean }) => <ListItemRow key={item.id} item={item} completed={completed} busy={overrides.has(item.id)} onToggle={() => complete.mutate({ item, completed: !completed })} />;
   return <Screen standalone title={list.data?.name ?? 'List'} description={list.data ? `${list.data.type} · Shared with your space` : 'Your shared list'}>
-    <Button variant="secondary" label="Back to lists" onPress={() => router.replace('/lists')} />
     {list.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading list" />}
     {list.isError && <><Notice error message="We couldn’t load this list." /><Button label="Try again" onPress={() => void list.refetch()} /></>}
     {list.isSuccess && !list.data && <Surface><Text variant="heading">List unavailable</Text><Text tone="secondary">It may have been removed, or you may no longer have access.</Text></Surface>}

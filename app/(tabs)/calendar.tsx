@@ -1,11 +1,13 @@
 import { addDays, eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
+import { CalendarPlus } from 'lucide-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { EventCard } from '@/components/calendar/event-card';
 import { FreeTimeCard } from '@/components/calendar/free-time-card';
 import { Button } from '@/components/ui/button';
 import { ChoiceChips } from '@/components/ui/choice-chips';
+import { CompactAction } from '@/components/ui/compact-action';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
@@ -40,7 +42,7 @@ export default function CalendarScreen() {
   const best = allDay.length ? mostUsefulFreeTime(free) : undefined;
   const days = view === 'Day' ? [] : eachDayOfInterval({ start: window.start, end: addDays(window.end, -1) });
   return <Screen title="Calendar" description="Your plans, your partner’s time, and room to be together." pageTitle="Calendar">
-    <Button label="Add event" onPress={() => router.push('/event/new')} />
+    <CompactAction icon={CalendarPlus} label="New event" description="Private details or shared plan" onPress={() => router.push('/event/new')} />
     <ChoiceChips label="View" value={view} options={(['Day', 'Week', 'Month'] as const).map((value) => ({ value, label: value }))} onChange={setView} />
     <View style={styles.navigation}><Pressable accessibilityRole="button" accessibilityLabel="Previous period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, -1))}><Text variant="title">‹</Text></Pressable><Text variant="heading" accessibilityLiveRegion="polite">{view === 'Day' ? format(anchor, 'EEEE, MMM d') : view === 'Week' ? `${format(window.start, 'MMM d')}–${format(addDays(window.end, -1), 'MMM d')}` : format(anchor, 'MMMM yyyy')}</Text><Pressable accessibilityRole="button" accessibilityLabel="Next period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, 1))}><Text variant="title">›</Text></Pressable></View>
     {!isSameDay(anchor, new Date()) && <Button label="Go to today" variant="secondary" onPress={() => setAnchor(startOfDay(new Date()))} />}
@@ -51,7 +53,7 @@ export default function CalendarScreen() {
     {filter === 'Together' && partner && query.isSuccess && <FreeTimeCard block={best} empty={allDay.length > 0 && free.length === 0} />}
     {query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading calendar" />}
     {query.isError && <><Notice error message="We couldn’t load these dates." /><Button label="Try again" variant="secondary" onPress={() => void query.refetch()} /></>}
-    {query.isSuccess && !(filter === 'Partner' && !partner) && <><Text variant="heading" accessibilityRole="header">{format(anchor, 'EEEE, MMMM d')}</Text>{visible.length === 0 ? <Surface><Text variant="heading">{filter === 'Partner' ? 'Nothing on their calendar yet' : filter === 'Together' ? 'No shared plans yet' : 'Your day is clear'}</Text><Text tone="secondary">{filter === 'Mine' ? 'Add a personal or shared event when something comes up.' : 'Plans added to Tandem will appear here.'}</Text>{filter === 'Mine' && <Button label="Add an event" variant="secondary" onPress={() => router.push('/event/new')} />}</Surface> : visible.map((event, index) => <EventCard key={event.id ?? `busy-${event.owner_id}-${event.start_at}-${index}`} event={event} viewerId={userId} ownerName={ownerName(event.owner_id)} />)}</>}
+    {query.isSuccess && !(filter === 'Partner' && !partner) && <><Text variant="heading" accessibilityRole="header">{format(anchor, 'EEEE, MMMM d')}</Text>{visible.length === 0 ? <Surface><Text variant="heading">{filter === 'Partner' ? 'Nothing on their calendar yet' : filter === 'Together' ? 'No shared plans yet' : 'Your day is clear'}</Text><Text tone="secondary">{filter === 'Mine' ? 'Add a personal or shared event when something comes up.' : 'Plans added to Tandem will appear here.'}</Text>{filter === 'Mine' && <Button label="Add an event" variant="quiet" onPress={() => router.push('/event/new')} />}</Surface> : visible.map((event, index) => <EventCard key={event.id ?? `busy-${event.owner_id}-${event.start_at}-${index}`} event={event} viewerId={userId} ownerName={ownerName(event.owner_id)} />)}</>}
   </Screen>;
 }
 const styles = StyleSheet.create({ navigation: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }, arrow: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, backgroundColor: colors.accentSoft }, week: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.xs }, day: { flex: 1, minHeight: 72, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, backgroundColor: colors.surfaceMuted }, selected: { backgroundColor: colors.accent }, month: { flexDirection: 'row', flexWrap: 'wrap' }, monthDay: { width: `${100 / 7}%`, minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.sm } });

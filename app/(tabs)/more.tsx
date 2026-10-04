@@ -1,6 +1,7 @@
 import { ConnectionCard } from '@/components/couples/connection-card';
 import { useState } from 'react';
 import { ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
 
 import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
@@ -27,8 +28,23 @@ export default function MoreScreen() {
   }
 
   return (
-    <Screen title="More" description="Your account and a little room for what’s next.">
+    <Screen title="More" description="Your shared life, all in one place.">
       <ConnectionCard />
+      <Surface>
+        <Text variant="title">Money</Text>
+        <Text tone="secondary">Track personal or shared spending and keep the balance clear.</Text>
+        <Button label="Open money" onPress={() => router.push('/money')} />
+      </Surface>
+      <Surface>
+        <Text variant="title">Reminders</Text>
+        <Text tone="secondary">Keep small promises visible at the right time.</Text>
+        <Button label="Open reminders" onPress={() => router.push('/reminders')} accessibilityLabel="Open reminders" />
+      </Surface>
+      <Surface>
+        <Text variant="title">Date ideas</Text>
+        <Text tone="secondary">Save things you’d love to do and find a time that fits.</Text>
+        <Button label="Open date ideas" onPress={() => router.push('/dates')} />
+      </Surface>
       <Surface>
         <Text variant="title" accessibilityRole="header">Your account</Text>
         {profile.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading your profile" /> : profile.isError ? (
@@ -45,7 +61,6 @@ export default function MoreScreen() {
         {error && <Notice error message={error} />}
         <Button label="Log out" loading={loggingOut} onPress={() => void logout()} />
       </Surface>
-      <Text tone="secondary">Shared expenses, reminders, and date ideas are coming to Tandem.</Text>
     </Screen>
   );
 }

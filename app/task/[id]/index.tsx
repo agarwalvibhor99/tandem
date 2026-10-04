@@ -46,7 +46,6 @@ function TaskDetail({ task }: { task: Task }) {
       <Button label="Yes, delete task" loading={remove.isPending} disabled={busy} onPress={() => remove.mutate(task, { onSuccess: () => router.replace('/tasks') })} />
       <Button label="Keep task" variant="secondary" disabled={remove.isPending} onPress={() => setConfirmDelete(false)} />
     </Surface> : <Button label="Delete task" variant="secondary" disabled={busy} onPress={() => setConfirmDelete(true)} />}
-    <Button label="Back to tasks" variant="secondary" onPress={() => router.replace('/tasks')} />
   </>;
 }
 export default function TaskDetailScreen() {

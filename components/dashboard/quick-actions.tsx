@@ -1,27 +1,26 @@
-import { Bell, CalendarPlus, ListPlus, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
+import { Bell, CalendarPlus, Coffee, ListPlus, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
-type Action = { label: string; icon: LucideIcon; href?: '/task/new' | '/lists' | '/event/new' };
+type Action = { label: string; icon: LucideIcon; href: '/task/new' | '/lists' | '/event/new' | '/expense/new' | '/reminder/new' | '/date/new' };
 const actions: Action[] = [
   { label: 'Add Task', icon: Plus, href: '/task/new' },
   { label: 'Add Event', icon: CalendarPlus, href: '/event/new' },
-  { label: 'Add Expense', icon: Wallet },
-  { label: 'Add Grocery', icon: ListPlus, href: '/lists' },
-  { label: 'Add Reminder', icon: Bell },
+  { label: 'Add Expense', icon: Wallet, href: '/expense/new' },
+  { label: 'Groceries', icon: ListPlus, href: '/lists' },
+  { label: 'Add Reminder', icon: Bell, href: '/reminder/new' },
+  { label: 'Save Date Idea', icon: Coffee, href: '/date/new' },
 ];
 export function QuickActions() {
   return <View style={styles.section}>
     <Text variant="label" accessibilityRole="header">Quick actions</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions} accessibilityLabel="Quick actions">
       {actions.map(({ label, icon: Icon, href }) => {
-        const available = !!href;
-        return <Pressable key={label} accessibilityRole="button" accessibilityLabel={available ? label : `${label}, coming soon`} accessibilityState={{ disabled: !available }} disabled={!available} onPress={href ? () => router.push(href) : undefined} style={({ pressed }) => [styles.action, available ? styles.available : styles.unavailable, pressed && styles.pressed]}>
-          <Icon size={layout.iconSize} strokeWidth={1.5} color={available ? colors.onAccent : colors.textSecondary} />
-          <Text variant="label" tone={available ? 'inverse' : 'secondary'}>{label}</Text>
-          {!available && <Text variant="caption" tone="secondary">Soon</Text>}
+        return <Pressable key={label} accessibilityRole="button" accessibilityLabel={label} onPress={() => router.push(href)} style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+          <Icon size={layout.iconSize} strokeWidth={1.5} color={colors.accent} />
+          <Text variant="label">{label}</Text>
         </Pressable>;
       })}
     </ScrollView>
@@ -29,6 +28,6 @@ export function QuickActions() {
 }
 const styles = StyleSheet.create({
   section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { alignItems: 'flex-start', justifyContent: 'center', gap: spacing.xs, minWidth: layout.minTouchTarget * 2, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.md },
-  available: { backgroundColor: colors.accent }, unavailable: { backgroundColor: colors.surfaceMuted }, pressed: { backgroundColor: colors.accentPressed },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  pressed: { backgroundColor: colors.accentSoft },
 });

@@ -6,6 +6,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TaskSyncProvider } from '@/providers/task-sync-provider';
 import { ListSyncProvider } from '@/providers/list-sync-provider';
 import { CalendarSyncProvider } from '@/providers/calendar-sync-provider';
+import { ExpenseSyncProvider } from '@/providers/expense-sync-provider';
+import { ReminderNotificationProvider } from '@/providers/reminder-notification-provider';
+import { ReminderSyncProvider } from '@/providers/reminder-sync-provider';
+import { DateIdeaSyncProvider } from '@/providers/date-idea-sync-provider';
 import { AppProviders } from '@/components/app-providers';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
@@ -34,6 +38,10 @@ function AuthenticatedNavigation() {
     <TaskSyncProvider>
     <ListSyncProvider>
     <CalendarSyncProvider>
+    <ExpenseSyncProvider>
+    <ReminderNotificationProvider>
+    <ReminderSyncProvider>
+    <DateIdeaSyncProvider>
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Protected guard={!auth.session}>
         <Stack.Screen name="(auth)" />
@@ -44,9 +52,20 @@ function AuthenticatedNavigation() {
         <Stack.Screen name="task" />
         <Stack.Screen name="list" />
         <Stack.Screen name="event" />
+        <Stack.Screen name="money" />
+        <Stack.Screen name="expense" />
+        <Stack.Screen name="reminders" />
+        <Stack.Screen name="reminder" />
+        <Stack.Screen name="dates" />
+        <Stack.Screen name="date" />
+        <Stack.Screen name="date-planner" />
       </Stack.Protected>
       <Stack.Screen name="+not-found" />
     </Stack>
+    </DateIdeaSyncProvider>
+    </ReminderSyncProvider>
+    </ReminderNotificationProvider>
+    </ExpenseSyncProvider>
     </CalendarSyncProvider>
     </ListSyncProvider>
     </TaskSyncProvider>

@@ -4,6 +4,7 @@ import { ActivityIndicator } from 'react-native';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { AssigneeAvatar } from '@/components/tasks/assignee-avatar';
 import { colors } from '@/constants/theme';
 
 type Props = { loading: boolean; error: boolean; partnerName?: string; spaceName?: string; hasSpace: boolean; onRetry: () => void };
@@ -13,7 +14,7 @@ export function PartnerStatusCard({ loading, error, partnerName, spaceName, hasS
       <Text tone="secondary">We couldn’t check your connection. Your personal tasks are still here.</Text>
       <Button label="Check connection" variant="secondary" onPress={onRetry} />
     </> : partnerName ? <>
-      <Text variant="heading">Connected with {partnerName}</Text>
+      <AssigneeAvatar name={partnerName} />
       {spaceName && <Text variant="caption" tone="secondary">{spaceName}</Text>}
     </> : <>
       <Text tone="secondary">Connect your partner to start planning together.</Text>

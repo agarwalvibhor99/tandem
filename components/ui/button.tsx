@@ -6,7 +6,7 @@ import { colors, layout, radii, spacing } from '@/constants/theme';
 type Props = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   loading?: boolean;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'quiet';
 };
 
 export function Button({ label, loading = false, variant = 'primary', disabled, ...props }: Props) {
@@ -22,12 +22,13 @@ export function Button({ label, loading = false, variant = 'primary', disabled, 
       style={({ pressed }) => [
         styles.button,
         variant === 'secondary' && styles.secondary,
-        pressed && (variant === 'secondary' ? styles.secondaryPressed : styles.pressed),
+        variant === 'quiet' && styles.quiet,
+        pressed && (variant === 'primary' ? styles.pressed : styles.secondaryPressed),
         isDisabled && styles.disabled,
       ]}
     >
-      {loading && <ActivityIndicator color={variant === 'secondary' ? colors.accent : colors.onAccent} />}
-      <Text variant="label" tone={variant === 'secondary' ? 'accent' : 'inverse'}>{label}</Text>
+      {loading && <ActivityIndicator color={variant === 'primary' ? colors.onAccent : colors.accent} />}
+      <Text variant="label" tone={variant === 'primary' ? 'inverse' : 'accent'}>{label}</Text>
     </Pressable>
   );
 }
@@ -46,6 +47,7 @@ const styles = StyleSheet.create({
   },
   secondaryPressed: { opacity: 0.75 },
   secondary: { backgroundColor: colors.accentSoft },
+  quiet: { backgroundColor: 'transparent', paddingHorizontal: 0, alignSelf: 'flex-start' },
   pressed: { backgroundColor: colors.accentPressed },
   disabled: { opacity: 0.5 },
 });

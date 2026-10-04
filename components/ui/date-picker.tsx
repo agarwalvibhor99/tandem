@@ -1,5 +1,6 @@
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from 'date-fns';
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -25,9 +26,9 @@ export function DatePicker({ value, onChange, disabled, label = 'Due date', prom
               <Button label="Tomorrow" variant="secondary" onPress={() => choose(addDays(new Date(), 1))} />
             </View>
             <View style={styles.month}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Previous month" style={styles.arrow} onPress={() => setMonth(addMonths(month, -1))}><Text variant="title">‹</Text></Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Previous month" style={styles.arrow} onPress={() => setMonth(addMonths(month, -1))}><ChevronLeft color={colors.text} size={layout.iconSize} /></Pressable>
               <Text variant="heading" accessibilityLiveRegion="polite">{format(month, 'MMMM yyyy')}</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Next month" style={styles.arrow} onPress={() => setMonth(addMonths(month, 1))}><Text variant="title">›</Text></Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Next month" style={styles.arrow} onPress={() => setMonth(addMonths(month, 1))}><ChevronRight color={colors.text} size={layout.iconSize} /></Pressable>
             </View>
             <View style={styles.grid}>
               {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <View key={day} style={styles.day}><Text variant="caption" tone="secondary">{day}</Text></View>)}

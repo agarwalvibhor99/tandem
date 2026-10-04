@@ -1,6 +1,9 @@
 import type { Task, TaskInput } from './task';
 import type { ListInput, ListItem, ListItemInput, SharedList } from './list';
 import type { CalendarEntry, CalendarEvent, CalendarEventInput } from './calendar';
+import type { Expense, ExpenseSplit, ExpenseSummaryRow } from './expense';
+import type { Reminder, ReminderInput } from './reminder';
+import type { DateIdea, DateIdeaInput } from './date-idea';
 
 /** Matches the checked-in migrations. Regenerate from the live schema after deployment. */
 export type Profile = {
@@ -24,6 +27,10 @@ export type Database = {
   public: {
     Tables: {
       calendar_events: { Row: CalendarEvent; Insert: CalendarEventInput & { id?: string }; Update: Partial<CalendarEventInput>; Relationships: [] };
+      expenses: { Row: Expense; Insert: never; Update: never; Relationships: [] };
+      expense_splits: { Row: ExpenseSplit; Insert: never; Update: never; Relationships: [] };
+      reminders: { Row: Reminder; Insert: ReminderInput; Update: Partial<ReminderInput & Pick<Reminder, 'completed'>>; Relationships: [] };
+      date_ideas: { Row: DateIdea; Insert: DateIdeaInput; Update: Partial<Omit<DateIdeaInput, 'couple_id'>>; Relationships: [] };
       lists: { Row: SharedList; Insert: ListInput; Update: never; Relationships: [] };
       list_items: { Row: ListItem; Insert: ListItemInput; Update: Partial<Pick<ListItem, 'name' | 'quantity' | 'category' | 'notes' | 'completed'>>; Relationships: [] };
       tasks: { Row: Task; Insert: TaskInput & { id?: string; status?: Task['status'] }; Update: Partial<TaskInput & { status: Task['status'] }>; Relationships: [] };
@@ -45,6 +52,10 @@ export type Database = {
       generate_couple_invite: { Args: Record<string, never>; Returns: CoupleInvite };
       accept_couple_invite: { Args: { code: string }; Returns: string };
       get_couple_members: { Args: Record<string, never>; Returns: CoupleMember[] };
+      create_expense: { Args: { p_title: string; p_amount: number; p_currency: string; p_category: string; p_expense_date: string; p_notes: string; p_paid_by: string; p_visibility: string; p_splits: unknown }; Returns: string };
+      update_expense: { Args: { p_expense_id: string; p_title: string; p_amount: number; p_currency: string; p_category: string; p_expense_date: string; p_notes: string; p_paid_by: string; p_visibility: string; p_splits: unknown }; Returns: string };
+      delete_expense: { Args: { p_expense_id: string }; Returns: undefined };
+      get_expense_summary: { Args: { month_start: string; p_visibility: string }; Returns: ExpenseSummaryRow[] };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

@@ -4,11 +4,13 @@ import { CompletionNotice } from '@/components/tasks/completion-notice';
 import { TaskCard } from '@/components/tasks/task-card';
 import { TaskFilterTabs } from '@/components/tasks/task-filter-tabs';
 import { Button } from '@/components/ui/button';
+import { CompactAction } from '@/components/ui/compact-action';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { colors, spacing } from '@/constants/theme';
+import { Plus } from 'lucide-react-native';
 import { useScreenFocus } from '@/hooks/use-screen-focus';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
@@ -38,7 +40,7 @@ export default function TasksScreen() {
   const rows = projectTaskList(tasks.data?.pages.flat() ?? [], pending, filter, userId, tomorrow);
   const pendingIds = new Set(pending.map(({ task }) => task.id));
   return <Screen title="Tasks" description="A little less on your mind. One thing at a time.">
-    <Button label="Add a task" onPress={() => router.push('/task/new')} />
+    <CompactAction icon={Plus} label="New task" description="Personal, shared, or assigned" onPress={() => router.push('/task/new')} />
     <TaskFilterTabs value={filter} onChange={setFilter} />
     <Text tone="secondary">{explanations[filter]}</Text>
     {!healthy && <Text variant="caption" tone="secondary">Live updates are reconnecting. Your list also refreshes periodically.</Text>}

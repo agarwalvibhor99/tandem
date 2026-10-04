@@ -24,6 +24,5 @@ export default function NewListScreen() {
     <Controller control={form.control} name="name" render={({ field, fieldState }) => <FormField label="List name" placeholder={type === 'Custom' ? 'e.g. Weekend away' : undefined} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} maxLength={100} editable={!create.isPending} />} />
     {create.error && <Notice error message={listErrorMessage(create.error)} />}
     <Button label="Create list" loading={create.isPending} disabled={!couple.data} onPress={() => void submit()} />
-    <Button label="Cancel" variant="secondary" onPress={() => router.back()} />
   </Screen>;
 }
