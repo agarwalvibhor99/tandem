@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from 'date-fns';
-import { Bell, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, SlidersHorizontal } from 'lucide-react-native';
+import { format } from 'date-fns';
+import { Bell, CalendarDays, ChevronDown, Clock3, SlidersHorizontal } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { TimePicker } from '@/components/calendar/time-picker';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { GroupDivider, GroupedPanel, GroupRow } from '@/components/ui/grouped-rows';
 import { HeroTextField } from '@/components/ui/hero-text-field';
 import { ChoiceChips } from '@/components/ui/choice-chips';
@@ -15,7 +16,7 @@ import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
 import { PersonSelector } from '@/components/ui/person-selector';
 import { VisibilitySegment } from '@/components/ui/visibility-segment';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { colors, layout, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCurrentCouple } from '@/hooks/use-current-couple';
@@ -33,22 +34,7 @@ function dueTimeLabel(value: string | null) { return value ? format(new Date(val
 function withDefaultTaskTime(day: Date, current: string | null) { const next = current ? new Date(current) : new Date(day); next.setFullYear(day.getFullYear(), day.getMonth(), day.getDate()); if (!current) next.setHours(9, 0, 0, 0); return next.toISOString(); }
 
 function TaskDueDateRow({ value, onChange, disabled }: { value: string | null; onChange: (value: string | null) => void; disabled?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState(() => startOfMonth(value ? new Date(value) : new Date()));
-  const days = eachDayOfInterval({ start: startOfWeek(month), end: endOfWeek(endOfMonth(month)) });
-  const choose = (date: Date | null) => { onChange(date ? withDefaultTaskTime(date, value) : null); setOpen(false); };
-  return <>
-    <GroupRow icon={CalendarDays} title="Due date" value={dueLabel(value)} accessibilityLabel="Choose due date" disabled={disabled} onPress={() => { setMonth(startOfMonth(value ? new Date(value) : new Date())); setOpen(true); }} />
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-      <View style={styles.backdrop}><View style={styles.dialog} accessibilityViewIsModal>
-        <Text variant="title" accessibilityRole="header">When is it due?</Text>
-        <View style={styles.quickDates}><Button label="Today" variant="secondary" onPress={() => choose(new Date())} /><Button label="Tomorrow" variant="secondary" onPress={() => choose(addDays(new Date(), 1))} /></View>
-        <View style={styles.month}><Pressable accessibilityRole="button" accessibilityLabel="Previous month" style={styles.arrow} onPress={() => setMonth(addMonths(month, -1))}><ChevronLeft color={colors.text} size={layout.iconSize} /></Pressable><Text variant="heading">{format(month, 'MMMM yyyy')}</Text><Pressable accessibilityRole="button" accessibilityLabel="Next month" style={styles.arrow} onPress={() => setMonth(addMonths(month, 1))}><ChevronRight color={colors.text} size={layout.iconSize} /></Pressable></View>
-        <View style={styles.grid}>{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <View key={day} style={styles.day}><Text variant="caption" tone="secondary">{day}</Text></View>)}{days.map((day) => { const selected = !!value && isSameDay(day, new Date(value)); return <Pressable key={day.toISOString()} accessibilityRole="button" accessibilityLabel={format(day, 'EEEE, MMMM d, yyyy')} accessibilityState={{ selected }} onPress={() => choose(day)} style={[styles.day, selected && styles.selectedDay]}><Text tone={selected ? 'inverse' : isSameMonth(day, month) ? 'default' : 'secondary'}>{format(day, 'd')}</Text></Pressable>; })}</View>
-        <Button label="No due date" variant="secondary" onPress={() => choose(null)} /><Button label="Cancel" variant="secondary" onPress={() => setOpen(false)} />
-      </View></View>
-    </Modal>
-  </>;
+  return <DatePicker value={value} onChange={(next) => onChange(next ? withDefaultTaskTime(new Date(next), value) : null)} disabled={disabled} renderTrigger={(open) => <GroupRow icon={CalendarDays} title="Due date" value={dueLabel(value)} accessibilityLabel="Choose due date" disabled={disabled} onPress={open} />} />;
 }
 
 export function TaskForm({ task }: { task?: Task }) {
@@ -132,12 +118,4 @@ const styles = StyleSheet.create({
   error: { color: colors.error },
   section: { gap: spacing.sm },
   expanded: { gap: spacing.lg, padding: spacing.lg, paddingTop: 0 },
-  backdrop: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  dialog: { gap: spacing.lg, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: radii.lg, width: '100%', maxWidth: layout.dialogMaxWidth, maxHeight: '90%' },
-  quickDates: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  arrow: { minHeight: layout.minTouchTarget, minWidth: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  day: { width: `${100 / 7}%`, minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.sm },
-  selectedDay: { backgroundColor: colors.accent },
 });

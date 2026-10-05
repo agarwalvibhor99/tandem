@@ -12,7 +12,9 @@ import { FormField } from '@/components/ui/form-field';
 import { IconTile } from '@/components/ui/icon-tile';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing, typography } from '@/constants/theme';
+import { PersonSelector } from '@/components/ui/person-selector';
+import { VisibilitySegment } from '@/components/ui/visibility-segment';
+import { borders, colors, layout, radii, spacing, typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCurrentCouple } from '@/hooks/use-current-couple';
@@ -109,11 +111,11 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
     </View>} />
     <Controller control={form.control} name="visibility" render={({ field }) => <View style={styles.section}>
       <Text variant="label">Spending</Text>
-      <View style={styles.segment}><Pressable accessibilityRole="button" accessibilityState={{ selected: field.value === 'private' }} onPress={() => field.onChange('private')} style={[styles.segmentItem, field.value === 'private' && styles.segmentSelected]}><Text variant="label" tone={field.value === 'private' ? 'inverse' : 'secondary'}>Personal</Text></Pressable><Pressable accessibilityRole="button" accessibilityState={{ selected: field.value === 'shared', disabled: !connected }} disabled={!connected} onPress={() => field.onChange('shared')} style={[styles.segmentItem, field.value === 'shared' && styles.segmentSelected, !connected && styles.disabled]}><Text variant="label" tone={field.value === 'shared' ? 'inverse' : 'secondary'}>Shared</Text></Pressable></View>
+      <VisibilitySegment value={field.value} onChange={field.onChange} sharedAvailable={connected} disabled={busy} />
       <Text variant="caption" tone="secondary">{field.value === 'shared' ? 'Both of you can see this expense and the split.' : connected ? 'Only you can see this expense.' : 'Only you can see this expense. Connect your partner to add couple spending.'}</Text>
     </View>} />
     {visibility === 'shared' && <View style={styles.panel}>
-      <Controller control={form.control} name="paid_by" render={({ field }) => <View style={styles.section}><Text variant="label">Who paid?</Text><View style={styles.peopleRow}>{memberRows.map((member) => { const selected = field.value === member.user_id; return <Pressable key={member.user_id} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => field.onChange(member.user_id)} style={[styles.personCard, selected && styles.personSelected]}><View style={[styles.avatar, selected && styles.avatarSelected]}><Text variant="label" tone={selected ? 'inverse' : 'default'}>{member.user_id === userId ? 'Y' : member.name.slice(0, 1).toUpperCase()}</Text></View><Text variant="label" tone={selected ? 'accent' : 'default'}>{member.user_id === userId ? 'You' : member.name}</Text></Pressable>; })}</View></View>} />
+      <Controller control={form.control} name="paid_by" render={({ field }) => <PersonSelector label="Who paid?" value={field.value} onChange={(value) => field.onChange(value ?? userId)} people={memberRows} userId={userId} disabled={busy} />} />
       <Controller control={form.control} name="splitMode" render={({ field }) => <ChoiceChips label="How do you split it?" value={field.value} options={[{ value: 'equal' as const, label: 'Equally' }, { value: 'one_payer' as const, label: `All on ${nameFor(paidBy, userId, memberRows).replace('You', 'you')}` }, { value: 'custom' as const, label: 'Custom' }]} onChange={field.onChange} disabled={busy} />} />
       {splitMode === 'custom' && <View style={styles.custom}><Text variant="caption" tone="secondary">Shares must add up to {amountCents > 0 ? money(amountCents) : 'the amount'}.</Text>{memberRows.map((member) => <FormField key={member.user_id} label={`${member.user_id === userId ? 'Your' : member.name} share`} placeholder="0.00" keyboardType="decimal-pad" value={customAmounts[member.user_id] ?? ''} onChangeText={(value) => setCustomAmounts((current) => ({ ...current, [member.user_id]: value }))} editable={!busy} />)}</View>}
     </View>}
@@ -126,27 +128,18 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
 }
 
 const styles = StyleSheet.create({
-  form: { gap: 26 },
+  form: { gap: layout.fieldGap },
   hero: { alignItems: 'center', gap: spacing.sm },
-  amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, minWidth: 240 },
-  currency: { ...typography.display, fontSize: 44, lineHeight: 64, color: colors.textSecondary },
-  amountInput: { ...typography.display, fontSize: 64, lineHeight: 76, minWidth: 180, color: colors.text, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderBottomWidth: borders.thin, borderBottomColor: colors.border, minWidth: layout.amountRowMinWidth },
+  currency: { ...typography.moneyCurrency, color: colors.textSecondary },
+  amountInput: { ...typography.money, minWidth: layout.amountInputMinWidth, color: colors.text, textAlign: 'center' },
   error: { color: colors.error },
   section: { gap: spacing.sm },
   tileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  segment: { flexDirection: 'row', padding: spacing.xs, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, gap: spacing.xs },
-  segmentItem: { flex: 1, minHeight: 44, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center' },
-  segmentSelected: { backgroundColor: colors.accent },
-  disabled: { opacity: 0.45 },
-  panel: { gap: spacing.lg, padding: spacing.lg, borderRadius: radii.lg, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
-  peopleRow: { flexDirection: 'row', gap: spacing.sm },
-  personCard: { flex: 1, minHeight: 64, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md },
-  personSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  avatar: { width: layout.avatarSize, height: layout.avatarSize, borderRadius: layout.avatarSize / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceMuted },
-  avatarSelected: { backgroundColor: colors.accent },
+  panel: { gap: spacing.lg, padding: spacing.lg, borderRadius: radii.lg, borderWidth: borders.strong, borderColor: colors.border, backgroundColor: colors.surface },
   custom: { gap: spacing.md, padding: spacing.lg, backgroundColor: colors.surfaceMuted, borderRadius: radii.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  softChip: { minHeight: 44, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.lg, justifyContent: 'center' },
+  softChip: { minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.lg, justifyContent: 'center' },
   softChipSelected: { backgroundColor: colors.accent },
   summary: { alignItems: 'center', paddingVertical: spacing.md },
 });

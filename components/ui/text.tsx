@@ -7,20 +7,19 @@ type Props = TextProps & {
   tone?: 'default' | 'secondary' | 'accent' | 'inverse';
 };
 
-const toneColors = {
-  default: colors.text,
-  secondary: colors.textSecondary,
-  accent: colors.accent,
-  inverse: colors.onAccent,
-};
-
 export function Text({ variant = 'body', tone = 'default', style, ...props }: Props) {
   return (
     <NativeText
       {...props}
-      style={[styles.base, typography[variant], { color: toneColors[tone] }, style]}
+      style={[styles.base, typography[variant], styles[tone], style]}
     />
   );
 }
 
-const styles = StyleSheet.create({ base: { flexShrink: 1 } });
+const styles = StyleSheet.create({
+  base: { flexShrink: 1 },
+  default: { color: colors.text },
+  secondary: { color: colors.textSecondary },
+  accent: { color: colors.accent },
+  inverse: { color: colors.onAccent },
+});

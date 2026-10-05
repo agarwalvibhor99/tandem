@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
 type CompactActionProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
@@ -23,7 +23,7 @@ export function CompactAction({ label, description, icon: Icon, disabled, ...pro
       style={({ pressed }) => [styles.action, pressed && styles.pressed, isDisabled && styles.disabled]}
     >
       <View style={styles.icon}>
-        <Icon color={colors.accent} size={20} strokeWidth={1.75} />
+        <Icon color={colors.accent} size={layout.iconSize} strokeWidth={borders.strong} />
       </View>
       <View style={styles.copy}>
         <Text variant="label">{label}</Text>
@@ -45,12 +45,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
-    borderWidth: 1,
+    borderWidth: borders.thin,
     borderColor: colors.border,
   },
   icon: {
-    width: 30,
-    height: 30,
+    width: layout.compactIconSize,
+    height: layout.compactIconSize,
     borderRadius: radii.pill,
     backgroundColor: colors.accentSoft,
     alignItems: 'center',

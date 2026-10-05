@@ -78,6 +78,8 @@ export const typography = {
   caption: { fontSize: 13, lineHeight: 20, fontWeight: '400', fontFamily: 'Figtree, System' },
   tab: { fontSize: 12, lineHeight: 16, fontWeight: '600', fontFamily: 'Figtree, System' },
   money: { fontSize: 64, lineHeight: 76, fontWeight: '700', letterSpacing: -2, fontFamily: 'Bricolage Grotesque, System', fontVariant: ['tabular-nums'] },
+  heroInput: { fontSize: 34, lineHeight: 44, fontWeight: '600', fontFamily: 'Bricolage Grotesque, System' },
+  moneyCurrency: { fontSize: 44, lineHeight: 64, fontWeight: '700', fontFamily: 'Bricolage Grotesque, System', fontVariant: ['tabular-nums'] },
 } as const satisfies Record<string, TextStyle>;
 
 export const radii = { sm: 8, md: 16, lg: 22, xl: 24, pill: 999 } as const;
@@ -103,4 +105,27 @@ export const layout = {
   emojiLineHeight: 28,
   pageMargin: 20,
   fieldGap: 26,
+  fieldHeight: 56,
+  heroFieldHeight: 86,
+  groupedRowHeight: 72,
+  listRowHeight: 64,
+  dashboardRowHeight: 88,
+  eventCardHeight: 78,
+  connectionRowHeight: 68,
+  avatarStackWidth: 58,
+  avatarOverlap: 14,
+  spendingBarHeight: 10,
+  spendingMarkerWidth: 8,
+  spendingMarkerHeight: 28,
+  iconTileMinWidth: 76,
+  iconTileMinHeight: 74,
+  smallControlHeight: 32,
+  compactIconSize: 30,
+  pickerHeight: 190,
+  amountCurrencySize: 44,
+  amountCurrencyLineHeight: 64,
+  amountInputMinWidth: 180,
+  amountRowMinWidth: 240,
 } as const;
+
+export const borders = { thin: 1, strong: 1.5, focus: 2 } as const;

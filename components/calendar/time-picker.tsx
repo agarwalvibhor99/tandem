@@ -1,12 +1,13 @@
 import { format } from 'date-fns';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
 const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
 const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0'));
@@ -91,8 +92,7 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
 
   return <View style={hideTrigger ? styles.hiddenGroup : styles.group}>
     {!hideTrigger && <><Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} /></>}
-    <Modal visible={open} transparent animationType="fade" onRequestClose={close}><View style={styles.backdrop}><View style={styles.dialog} accessibilityViewIsModal>
-      <Text variant="title" accessibilityRole="header">{label}</Text>
+    <Dialog visible={open} title={label} onClose={close}>
       <Text tone="secondary">Scroll to choose a common time, or type an exact minute.</Text>
       <View style={styles.pickerFrame}>
         <PickerColumn label="Hour" value={hour} options={hourOptions} onChange={setHour} />
@@ -110,18 +110,16 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
       />
       {error && <Notice error message={error} />}
       <Button label="Set time" onPress={save} /><Button label="Cancel" variant="secondary" onPress={close} />
-    </View></View></Modal>
+    </Dialog>
   </View>;
 }
 const styles = StyleSheet.create({
   group: { gap: spacing.lg },
   hiddenGroup: { height: 0, overflow: 'hidden' },
-  backdrop: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  dialog: { gap: spacing.lg, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: radii.lg, width: '100%', maxWidth: layout.dialogMaxWidth, maxHeight: '90%' },
-  pickerFrame: { height: 190, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.chip, padding: spacing.sm },
+  pickerFrame: { height: layout.pickerHeight, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.chip, padding: spacing.sm },
   column: { flex: 1, gap: spacing.xs },
   columnLabel: { textAlign: 'center' },
   columnContent: { paddingVertical: spacing.xl, gap: spacing.xs },
   option: { minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md },
-  selectedOption: { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.accent },
+  selectedOption: { backgroundColor: colors.accentSoft, borderWidth: borders.strong, borderColor: colors.accent },
 });

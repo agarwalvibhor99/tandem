@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { colors, radii, spacing } from '@/constants/theme';
+import { borders, colors, radii, spacing } from '@/constants/theme';
 
 export function PairedMark() {
   return (
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     width: spacing.lg,
     height: spacing.lg,
     borderRadius: radii.pill,
-    borderWidth: 2,
+    borderWidth: borders.focus,
     borderColor: colors.background,
   },
   mine: { backgroundColor: colors.accent },

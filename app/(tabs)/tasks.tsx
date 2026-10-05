@@ -1,15 +1,16 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { CompletionNotice } from '@/components/tasks/completion-notice';
 import { TaskCard } from '@/components/tasks/task-card';
 import { TaskFilterTabs } from '@/components/tasks/task-filter-tabs';
 import { Button } from '@/components/ui/button';
 import { CompactAction } from '@/components/ui/compact-action';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
-import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { colors, spacing } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { Plus } from 'lucide-react-native';
 import { useScreenFocus } from '@/hooks/use-screen-focus';
 import { useAuth } from '@/hooks/use-auth';
@@ -46,13 +47,13 @@ export default function TasksScreen() {
     {!healthy && <Text variant="caption" tone="secondary">Live updates are reconnecting. Your list also refreshes periodically.</Text>}
     {tasks.isError && <Notice error message="We couldn’t refresh your tasks. Any saved list below may be out of date." />}
     <CompletionNotice />
-    {tasks.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading tasks" /> : <>
+    {tasks.isPending ? <LoadingState label="Loading tasks" /> : <>
       <View style={styles.list}>{rows.map((task) => <TaskCard key={task.id} task={task} pending={pendingIds.has(task.id)} name={task.assigned_to === userId ? 'You' : members.data?.find((member) => member.user_id === task.assigned_to)?.name ?? (task.assigned_to ? 'Partner' : 'Anyone')} onToggle={() => complete.mutate({ task, status: task.status === 'completed' ? 'open' : 'completed' })} />)}</View>
-      {!rows.length && !tasks.isError && <Surface>
-        <Text variant="title">{filter === 'Completed' ? 'Room for small wins' : filter === 'Partner' ? 'Nothing on their plate' : 'Nothing on your plate'}</Text>
-        <Text tone="secondary">{filter === 'Today' ? 'No tasks due right now. Add something to take care of, or check Upcoming.' : filter === 'Completed' ? 'Completed tasks will appear here. You can reopen them anytime.' : 'Add a task when something needs doing.'}</Text>
-        {filter === 'Partner' && (members.data?.length ?? 0) < 2 && <Button label={couple.data ? 'Invite your partner' : 'Connect your partner'} variant="secondary" onPress={() => router.push(couple.data ? '/invite-partner' : '/create-space')} />}
-      </Surface>}
+      {!rows.length && !tasks.isError && <EmptyState
+        title={filter === 'Completed' ? 'Room for small wins' : filter === 'Partner' ? 'Nothing on their plate' : 'Nothing on your plate'}
+        description={filter === 'Today' ? 'No tasks due right now. Add something to take care of, or check Upcoming.' : filter === 'Completed' ? 'Completed tasks will appear here. You can reopen them anytime.' : 'Add a task when something needs doing.'}
+        action={filter === 'Partner' && (members.data?.length ?? 0) < 2 ? { label: couple.data ? 'Invite your partner' : 'Connect your partner', onPress: () => router.push(couple.data ? '/invite-partner' : '/create-space') } : undefined}
+      />}
     </>}
     {tasks.hasNextPage && <Button label="Load more" variant="quiet" loading={tasks.isFetchingNextPage} onPress={() => void tasks.fetchNextPage()} />}
   </Screen>;

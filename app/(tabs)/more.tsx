@@ -9,7 +9,7 @@ import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfile } from '@/hooks/use-profile';
 import { authErrorMessage } from '@/lib/auth/errors';
@@ -118,12 +118,12 @@ const styles = StyleSheet.create({
   },
   rows: { gap: spacing.xs },
   row: {
-    minHeight: 64,
+    minHeight: layout.listRowHeight,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    borderBottomWidth: borders.thin,
     borderColor: colors.border,
   },
   rowPressed: { opacity: 0.7 },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
-  accountRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  accountRow: { minHeight: layout.listRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',

@@ -2,7 +2,7 @@ import { Bell, CalendarPlus, Coffee, ListPlus, Plus, Wallet, type LucideIcon } f
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
 type Action = { label: string; icon: LucideIcon; href: '/task/new' | '/lists' | '/event/new' | '/expense/new' | '/reminder/new' | '/date/new' };
 const actions: Action[] = [
@@ -28,6 +28,6 @@ export function QuickActions() {
 }
 const styles = StyleSheet.create({
   section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border },
   pressed: { backgroundColor: colors.togetherSoft },
 });

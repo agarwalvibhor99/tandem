@@ -1,26 +1,24 @@
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from 'date-fns';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
 import { Text } from '@/components/ui/text';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 import { dueDateLabel, dueDateValue } from '@/lib/tasks/dates';
 
-type Props = { value: string | null; onChange: (value: string | null) => void; disabled?: boolean; label?: string; prompt?: string; allowClear?: boolean };
-export function DatePicker({ value, onChange, disabled, label = 'Due date', prompt = 'When is it due?', allowClear = true }: Props) {
+type Props = { value: string | null; onChange: (value: string | null) => void; disabled?: boolean; label?: string; prompt?: string; allowClear?: boolean; renderTrigger?: (open: () => void) => ReactNode };
+export function DatePicker({ value, onChange, disabled, label = 'Due date', prompt = 'When is it due?', allowClear = true, renderTrigger }: Props) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => startOfMonth(value ? new Date(value) : new Date()));
   const days = eachDayOfInterval({ start: startOfWeek(month), end: endOfWeek(endOfMonth(month)) });
   function choose(date: Date | null) { onChange(date ? dueDateValue(date) : null); setOpen(false); }
-  return <View style={styles.group}>
-    <Text variant="label">{label}</Text>
-    <Button variant="secondary" label={value ? dueDateLabel(value) : `Choose ${label.toLowerCase()}`} disabled={disabled} onPress={() => { setMonth(startOfMonth(value ? new Date(value) : new Date())); setOpen(true); }} />
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-      <View style={styles.backdrop}>
-        <View style={styles.dialog} accessibilityViewIsModal>
+  const show = () => { if (!disabled) { setMonth(startOfMonth(value ? new Date(value) : new Date())); setOpen(true); } };
+  return <View style={renderTrigger ? undefined : styles.group}>
+    {renderTrigger ? renderTrigger(show) : <><Text variant="label">{label}</Text><Button variant="secondary" label={value ? dueDateLabel(value) : `Choose ${label.toLowerCase()}`} disabled={disabled} onPress={show} /></>}
+    <Dialog visible={open} title={prompt} onClose={() => setOpen(false)}>
           <ScrollView contentContainerStyle={styles.group}>
-            <Text variant="title" accessibilityRole="header">{prompt}</Text>
             <View style={styles.quick}>
               <Button label="Today" variant="secondary" onPress={() => choose(new Date())} />
               <Button label="Tomorrow" variant="secondary" onPress={() => choose(addDays(new Date(), 1))} />
@@ -42,14 +40,11 @@ export function DatePicker({ value, onChange, disabled, label = 'Due date', prom
             {allowClear && <Button label="No due date" variant="secondary" onPress={() => choose(null)} />}
             <Button label="Cancel" variant="secondary" onPress={() => setOpen(false)} />
           </ScrollView>
-        </View>
-      </View>
-    </Modal>
+    </Dialog>
   </View>;
 }
 const styles = StyleSheet.create({
-  group: { gap: spacing.lg }, backdrop: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  dialog: { backgroundColor: colors.surface, padding: spacing.lg, borderRadius: radii.lg, width: '100%', maxWidth: layout.dialogMaxWidth, maxHeight: '90%' },
+  group: { gap: spacing.lg },
   quick: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, month: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   arrow: { minHeight: layout.minTouchTarget, minWidth: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' }, day: { width: `${100 / 7}%`, minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.sm }, selected: { backgroundColor: colors.accent },

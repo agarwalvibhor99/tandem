@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import { ArrowUpRight, ListPlus, ShoppingBasket } from 'lucide-react-native';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import { Button } from '@/components/ui/button';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { CompactAction } from '@/components/ui/compact-action';
-import { Notice } from '@/components/ui/notice';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Screen } from '@/components/ui/screen';
-import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 import { useLists } from '@/hooks/use-lists';
 import { useScreenFocus } from '@/hooks/use-screen-focus';
 import type { SharedList } from '@/types/list';
@@ -25,16 +25,16 @@ export default function ListsScreen() {
   const refreshing = couple.isFetching || query.isFetching;
   const refresh = () => { void couple.refetch(); void query.refetch(); };
   return <Screen title="Lists" description="Everything you need, kept together." pageTitle="Lists" refreshing={refreshing} onRefresh={refresh}>
-    {couple.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading shared space" />}
-    {couple.isError && <><Notice error message="We couldn’t load your shared space." /><Button variant="quiet" label="Try again" onPress={() => void couple.refetch()} /></>}
-    {couple.isSuccess && !couple.data && <Surface><ListPlus color={colors.accent} size={layout.featureIconSize} /><Text variant="heading">Lists are better together</Text><Text tone="secondary">Create a shared space to keep groceries, shopping and packing in one place.</Text><Button label="Connect your partner" onPress={() => router.push('/create-space')} /></Surface>}
+    {couple.isPending && <LoadingState label="Loading shared space" />}
+    {couple.isError && <ErrorState message="We couldn’t load your shared space." onRetry={() => void couple.refetch()} />}
+    {couple.isSuccess && !couple.data && <EmptyState icon={<ListPlus color={colors.accent} size={layout.featureIconSize} />} title="Lists are better together" description="Create a shared space to keep groceries, shopping and packing in one place." action={{ label: 'Connect your partner', onPress: () => router.push('/create-space') }} />}
     {couple.data && <>
       <CompactAction icon={ListPlus} label="New list" onPress={() => router.push('/list/new')} />
-      {query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading lists" />}
-      {query.isError && <><Notice error message="We couldn’t load your lists." /><Button variant="quiet" label="Try again" onPress={() => void query.refetch()} /></>}
-      {query.isSuccess && query.data.length === 0 && <Surface><ShoppingBasket color={colors.accent} size={layout.featureIconSize} /><Text variant="heading">A place for the little things</Text><Text tone="secondary">Make a grocery list, plan what to pack, or keep a shopping list you can both add to.</Text><Button variant="quiet" label="Create your first list" onPress={() => router.push('/list/new')} /></Surface>}
+      {query.isPending && <LoadingState label="Loading lists" />}
+      {query.isError && <ErrorState message="We couldn’t load your lists." onRetry={() => void query.refetch()} />}
+      {query.isSuccess && query.data.length === 0 && <EmptyState icon={<ShoppingBasket color={colors.accent} size={layout.featureIconSize} />} title="A place for the little things" description="Make a grocery list, plan what to pack, or keep a shopping list you can both add to." action={{ label: 'Create your first list', onPress: () => router.push('/list/new') }} />}
       {query.data?.map((list) => <ListCard key={list.id} list={list} />)}
     </>}
   </Screen>;
 }
-const styles = StyleSheet.create({ card: { flexDirection: 'row', alignItems: 'center', minHeight: 88, gap: spacing.lg, padding: spacing.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg }, listIcon: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' }, copy: { flex: 1, gap: spacing.xs } });
+const styles = StyleSheet.create({ card: { flexDirection: 'row', alignItems: 'center', minHeight: layout.dashboardRowHeight, gap: spacing.lg, padding: spacing.lg, backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border, borderRadius: radii.lg }, listIcon: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' }, copy: { flex: 1, gap: spacing.xs } });

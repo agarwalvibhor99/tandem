@@ -1,7 +1,9 @@
-import { ChoiceChips } from '@/components/ui/choice-chips';
+import { VisibilitySegment, type Visibility } from '@/components/ui/visibility-segment';
 import { Text } from '@/components/ui/text';
+import { StyleSheet, View } from 'react-native';
+import { spacing } from '@/constants/theme';
 
-export type Visibility = 'private' | 'shared';
+export type { Visibility };
 
 export function VisibilitySelector({ value, onChange, sharedAvailable, showUnavailableShared = false, disabled, label = 'Who can see this?', privateHint, sharedHint, sharedLabel = 'Shared' }: {
   value: Visibility;
@@ -14,8 +16,11 @@ export function VisibilitySelector({ value, onChange, sharedAvailable, showUnava
   sharedHint?: string;
   sharedLabel?: string;
 }) {
-  return <>
-    <ChoiceChips label={label} value={value} options={[{ value: 'private', label: 'Personal' }, ...(sharedAvailable || showUnavailableShared ? [{ value: 'shared' as const, label: sharedLabel === 'Shared' ? 'Ours' : sharedLabel, disabled: !sharedAvailable }] : [])]} onChange={onChange} disabled={disabled} />
+  return <View style={styles.group}>
+    <Text variant="label">{label}</Text>
+    <VisibilitySegment value={value} onChange={onChange} sharedAvailable={sharedAvailable} showShared={sharedAvailable || showUnavailableShared} disabled={disabled} sharedLabel={sharedLabel === 'Shared' ? 'Ours' : sharedLabel} />
     {(value === 'private' ? privateHint : sharedHint) && <Text variant="caption" tone="secondary">{value === 'private' ? privateHint : sharedHint}</Text>}
-  </>;
+  </View>;
 }
+
+const styles = StyleSheet.create({ group: { gap: spacing.sm } });

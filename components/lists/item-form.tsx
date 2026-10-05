@@ -9,7 +9,7 @@ import { FormField } from '@/components/ui/form-field';
 import { IconTile } from '@/components/ui/icon-tile';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
-import { colors, radii, spacing } from '@/constants/theme';
+import { colors, layout, radii, spacing } from '@/constants/theme';
 import { useListActions } from '@/hooks/use-lists';
 import { listErrorMessage } from '@/lib/lists/errors';
 import { itemSchema } from '@/lib/validation/list';
@@ -52,7 +52,7 @@ export function ItemForm({ listId, type, item, onSaved, compact = false, initial
             <View style={styles.quickAddInput}>
               <FormField label="Add an item" placeholder={type === 'Groceries' ? 'e.g. Milk' : 'e.g. Phone charger'} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} editable={!busy} maxLength={160} returnKeyType="done" onSubmitEditing={() => { void submit(); }} />
             </View>
-            <Button label="Add" variant="compact" loading={busy} disabled={changedElsewhere} onPress={() => void submit()} />
+            <Button label="Add" size="compact" loading={busy} disabled={changedElsewhere} onPress={() => void submit()} />
           </View>
         )}
       />
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm },
   inlineGroup: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  softChip: { minHeight: 40, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.md, justifyContent: 'center' },
+  softChip: { minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.md, justifyContent: 'center' },
   softChipSelected: { backgroundColor: colors.accent },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

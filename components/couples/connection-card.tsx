@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Notice } from '@/components/ui/notice';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 import { useCoupleActions } from '@/hooks/use-couple-actions';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCurrentCouple } from '@/hooks/use-current-couple';
@@ -57,11 +57,11 @@ export function ConnectionCard({ onboarding = false, compact = false }: { onboar
 }
 
 const styles = StyleSheet.create({
-  compactRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderColor: colors.border },
+  compactRow: { minHeight: layout.connectionRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: borders.thin, borderColor: colors.border },
   pressed: { opacity: 0.7 },
-  avatarStack: { width: 58, flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: layout.avatarSize, height: layout.avatarSize, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.surface },
-  avatarOverlap: { marginLeft: -14 },
+  avatarStack: { width: layout.avatarStackWidth, flexDirection: 'row', alignItems: 'center' },
+  avatar: { width: layout.avatarSize, height: layout.avatarSize, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft, borderWidth: borders.strong, borderColor: colors.surface },
+  avatarOverlap: { marginLeft: -layout.avatarOverlap },
   iconAvatar: { width: layout.avatarSize, height: layout.avatarSize, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
   avatarText: { fontWeight: '700' },
   compactCopy: { flex: 1, gap: spacing.xs },

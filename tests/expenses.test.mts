@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { calculateCoupleBalance, calculateCustomSplit, calculateEqualSplit, calculateOnePayerSplit, toCents, userNetPositions } from '../lib/expenses/calculations.ts';
+import { filterExpenses } from '../lib/expenses/filters.ts';
 
 test('splits an odd cent deterministically while preserving the total', () => {
   assert.deepEqual(calculateEqualSplit(101, ['alex', 'sam']), [{ userId: 'alex', amountCents: 51 }, { userId: 'sam', amountCents: 50 }]);
@@ -25,4 +26,16 @@ test('money input converts to exact cents', () => {
 
 test('one-person splits assign the full share to the selected member', () => {
   assert.deepEqual(calculateOnePayerSplit(1200, 'alex', ['alex', 'sam']), [{ userId: 'alex', amountCents: 1200 }, { userId: 'sam', amountCents: 0 }]);
+});
+
+test('expense search matches title case-insensitively and combines with category', () => {
+  const expenses = [
+    { title: 'Weekly groceries', category: 'Groceries' as const },
+    { title: 'Dinner at Juniper', category: 'Dining' as const },
+    { title: 'Groceries for dinner', category: 'Groceries' as const },
+  ];
+
+  assert.deepEqual(filterExpenses(expenses, 'DINNER', 'all'), [expenses[1], expenses[2]]);
+  assert.deepEqual(filterExpenses(expenses, 'groceries', 'Groceries'), [expenses[0], expenses[2]]);
+  assert.deepEqual(filterExpenses(expenses, '', 'Dining'), [expenses[1]]);
 });

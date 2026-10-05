@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
 export function GroupedPanel({ children }: PropsWithChildren) { return <View style={styles.panel}>{children}</View>; }
 export function GroupDivider() { return <View style={styles.divider} />; }
@@ -17,9 +17,9 @@ export function GroupRow({ icon: Icon, title, value, trailing, ...props }: Press
 }
 
 const styles = StyleSheet.create({
-  panel: { borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.surface, borderRadius: radii.lg, overflow: 'hidden' },
-  row: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
+  panel: { borderWidth: borders.strong, borderColor: colors.line, backgroundColor: colors.surface, borderRadius: radii.lg, overflow: 'hidden' },
+  row: { minHeight: layout.groupedRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg },
   rowIcon: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { flex: 1 },
-  divider: { height: 1.5, backgroundColor: colors.line, marginLeft: spacing.lg + layout.minTouchTarget + spacing.md },
+  divider: { height: borders.strong, backgroundColor: colors.line, marginLeft: spacing.lg + layout.minTouchTarget + spacing.md },
 });

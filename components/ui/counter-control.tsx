@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
 export function CounterControl({ label, value, min = 0, max = 99, onChange, disabled }: { label: string; value: number; min?: number; max?: number; onChange: (value: number) => void; disabled?: boolean }) {
   const decreaseDisabled = disabled || value <= min;
@@ -22,8 +22,8 @@ export function CounterControl({ label, value, min = 0, max = 99, onChange, disa
 
 const styles = StyleSheet.create({
   group: { gap: spacing.sm },
-  counter: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, padding: spacing.xs, gap: spacing.sm },
+  counter: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, borderWidth: borders.thin, borderColor: colors.border, padding: spacing.xs, gap: spacing.sm },
   stepper: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  value: { minWidth: 32, textAlign: 'center' },
+  value: { minWidth: layout.smallControlHeight, textAlign: 'center' },
   disabled: { opacity: 0.45 },
 });
