@@ -4,8 +4,8 @@ export const dueDateValue = (day: Date) => setHours(startOfDay(day), 12).toISOSt
 export function dueDateLabel(value: string | null) {
   if (!value) return 'No due date';
   const day = new Date(value);
-  if (isToday(day)) return 'Today';
-  if (isTomorrow(day)) return 'Tomorrow';
-  return format(day, 'MMM d, yyyy');
+  if (isToday(day)) return `Today at ${format(day, 'h:mm a')}`;
+  if (isTomorrow(day)) return `Tomorrow at ${format(day, 'h:mm a')}`;
+  return format(day, 'MMM d, yyyy · h:mm a');
 }
 export const isTaskOverdue = (value: string | null, now: Date) => !!value && isBefore(new Date(value), startOfDay(now));

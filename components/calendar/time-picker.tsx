@@ -1,20 +1,26 @@
 import { format } from 'date-fns';
-import { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
-import { ChoiceChips } from '@/components/ui/choice-chips';
 import { FormField } from '@/components/ui/form-field';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
 import { colors, layout, radii, spacing } from '@/constants/theme';
 
-const hourOptions = Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: String(index + 1) }));
-const minuteOptions = Array.from({ length: 60 }, (_, index) => {
-  const value = String(index).padStart(2, '0');
-  return { value, label: value };
-});
-const periodOptions = [{ value: 'AM', label: 'AM' }, { value: 'PM', label: 'PM' }];
+const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
+const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0'));
+const periodOptions = ['AM', 'PM'];
+
+type TimePickerProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  autoOpen?: boolean;
+  hideTrigger?: boolean;
+  onDismiss?: () => void;
+};
 
 function digitsOnly(value: string, maxLength: number) {
   return value.replace(/\D/g, '').slice(0, maxLength);
@@ -25,25 +31,52 @@ function parseTimePart(value: string) {
   return Number(value);
 }
 
-export function TimePicker({ label, value, onChange, disabled }: { label: string; value: string; onChange: (value: string) => void; disabled?: boolean }) {
+function PickerColumn({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  return <View style={styles.column}>
+    <Text variant="caption" tone="secondary" style={styles.columnLabel}>{label}</Text>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.columnContent} accessibilityLabel={label}>
+      {options.map((option) => {
+        const selected = option === value;
+        return <Pressable key={option} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => onChange(option)} style={[styles.option, selected && styles.selectedOption]}>
+          <Text variant={selected ? 'heading' : 'body'} tone={selected ? 'accent' : 'secondary'}>{option}</Text>
+        </Pressable>;
+      })}
+    </ScrollView>
+  </View>;
+}
+
+export function TimePicker({ label, value, onChange, disabled, autoOpen = false, hideTrigger = false, onDismiss }: TimePickerProps) {
   const [open, setOpen] = useState(false);
-  const date = new Date(value);
+  const openedAutomatically = useRef(false);
+  const date = useMemo(() => new Date(value), [value]);
   const [hour, setHour] = useState('9');
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState('AM');
+  const [exactMinute, setExactMinute] = useState('00');
   const [error, setError] = useState<string | null>(null);
 
-  const show = () => {
-    setHour(String(date.getHours() % 12 || 12));
-    setMinute(String(date.getMinutes()).padStart(2, '0'));
+  const show = useCallback(() => {
+    const nextHour = String(date.getHours() % 12 || 12);
+    const nextMinute = String(date.getMinutes()).padStart(2, '0');
+    setHour(nextHour);
+    setMinute(minuteOptions.includes(nextMinute) ? nextMinute : '00');
+    setExactMinute(nextMinute);
     setPeriod(date.getHours() < 12 ? 'AM' : 'PM');
     setError(null);
     setOpen(true);
-  };
+  }, [date]);
+  const close = () => { setOpen(false); onDismiss?.(); };
+
+  useEffect(() => {
+    if (autoOpen && !openedAutomatically.current && !disabled) {
+      openedAutomatically.current = true;
+      show();
+    }
+  }, [autoOpen, disabled, show]);
 
   const save = () => {
     const parsedHour = parseTimePart(hour);
-    const parsedMinute = parseTimePart(minute);
+    const parsedMinute = parseTimePart(exactMinute || minute);
 
     if (parsedHour === null || parsedHour < 1 || parsedHour > 12 || parsedMinute === null || parsedMinute < 0 || parsedMinute > 59) {
       setError('Enter a valid time. Use hour 1-12 and minute 0-59.');
@@ -53,45 +86,42 @@ export function TimePicker({ label, value, onChange, disabled }: { label: string
     const next = new Date(value);
     next.setHours((parsedHour % 12) + (period === 'PM' ? 12 : 0), parsedMinute, 0, 0);
     onChange(next.toISOString());
-    setOpen(false);
+    close();
   };
 
-  return <View style={styles.group}>
-    <Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} />
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}><View style={styles.backdrop}><View style={styles.dialog} accessibilityViewIsModal><ScrollView contentContainerStyle={styles.content}>
+  return <View style={hideTrigger ? styles.hiddenGroup : styles.group}>
+    {!hideTrigger && <><Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} /></>}
+    <Modal visible={open} transparent animationType="fade" onRequestClose={close}><View style={styles.backdrop}><View style={styles.dialog} accessibilityViewIsModal>
       <Text variant="title" accessibilityRole="header">{label}</Text>
-      <View style={styles.timeInputs}>
-        <FormField
-          label="Hour"
-          value={hour}
-          keyboardType="number-pad"
-          inputMode="numeric"
-          maxLength={2}
-          onChangeText={(next) => { setError(null); setHour(digitsOnly(next, 2)); }}
-          placeholder="9"
-        />
-        <FormField
-          label="Minute"
-          value={minute}
-          keyboardType="number-pad"
-          inputMode="numeric"
-          maxLength={2}
-          onChangeText={(next) => { setError(null); setMinute(digitsOnly(next, 2)); }}
-          placeholder="00"
-        />
+      <Text tone="secondary">Scroll to choose a common time, or type an exact minute.</Text>
+      <View style={styles.pickerFrame}>
+        <PickerColumn label="Hour" value={hour} options={hourOptions} onChange={setHour} />
+        <PickerColumn label="Minute" value={minute} options={minuteOptions} onChange={(next) => { setMinute(next); setExactMinute(next); }} />
+        <PickerColumn label="" value={period} options={periodOptions} onChange={setPeriod} />
       </View>
-      <ChoiceChips label="Hour" value={hour} options={hourOptions} onChange={(next) => { setError(null); setHour(next); }} scrollable />
-      <ChoiceChips label="Minute" value={minute.padStart(2, '0')} options={minuteOptions} onChange={(next) => { setError(null); setMinute(next); }} scrollable />
-      <ChoiceChips label="Time of day" value={period} options={periodOptions} onChange={setPeriod} />
+      <FormField
+        label="Exact minute"
+        value={exactMinute}
+        keyboardType="number-pad"
+        inputMode="numeric"
+        maxLength={2}
+        onChangeText={(next) => { setError(null); setExactMinute(digitsOnly(next, 2)); }}
+        placeholder="00"
+      />
       {error && <Notice error message={error} />}
-      <Button label="Set time" onPress={save} /><Button label="Cancel" variant="secondary" onPress={() => setOpen(false)} />
-    </ScrollView></View></View></Modal>
+      <Button label="Set time" onPress={save} /><Button label="Cancel" variant="secondary" onPress={close} />
+    </View></View></Modal>
   </View>;
 }
 const styles = StyleSheet.create({
   group: { gap: spacing.lg },
-  content: { gap: spacing.lg },
-  timeInputs: { flexDirection: 'row', gap: spacing.md },
+  hiddenGroup: { height: 0, overflow: 'hidden' },
   backdrop: { flex: 1, backgroundColor: colors.scrim, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-  dialog: { backgroundColor: colors.surface, padding: spacing.lg, borderRadius: radii.lg, width: '100%', maxWidth: layout.dialogMaxWidth, maxHeight: '90%' },
+  dialog: { gap: spacing.lg, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: radii.lg, width: '100%', maxWidth: layout.dialogMaxWidth, maxHeight: '90%' },
+  pickerFrame: { height: 190, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.chip, padding: spacing.sm },
+  column: { flex: 1, gap: spacing.xs },
+  columnLabel: { textAlign: 'center' },
+  columnContent: { paddingVertical: spacing.xl, gap: spacing.xs },
+  option: { minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md },
+  selectedOption: { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.accent },
 });

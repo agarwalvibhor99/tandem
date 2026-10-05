@@ -13,7 +13,7 @@ import type { Database } from '../types/database.ts';
 const user = 'bbbbbbbb-0000-4000-8000-000000000001';
 const partner = 'bbbbbbbb-0000-4000-8000-000000000002';
 const space = 'bbbbbbbb-0000-4000-8000-000000000003';
-const base: Task = { id: 'cccccccc-0000-4000-8000-000000000001', title: 'Book the car service', description: '', couple_id: null, created_by: user, assigned_to: user, visibility: 'private', due_at: null, category: 'Errands', priority: 'normal', status: 'open', completed_at: null, created_at: '2026-10-01T12:00:00.000Z', updated_at: '2026-10-01T12:00:00.000Z' };
+const base: Task = { id: 'cccccccc-0000-4000-8000-000000000001', title: 'Book the car service', description: '', couple_id: null, created_by: user, assigned_to: user, visibility: 'private', due_at: null, reminder_offset_minutes: null, category: 'Errands', priority: 'normal', status: 'open', completed_at: null, created_at: '2026-10-01T12:00:00.000Z', updated_at: '2026-10-01T12:00:00.000Z' };
 const tomorrow = '2026-10-04T00:00:00.000Z';
 
 test('task validation: sharing requires space; bounded title and notes; date format', () => {

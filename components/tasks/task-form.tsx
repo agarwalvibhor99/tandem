@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from 'date-fns';
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react-native';
+import { Bell, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, SlidersHorizontal } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { TimePicker } from '@/components/calendar/time-picker';
 import { Button } from '@/components/ui/button';
 import { GroupDivider, GroupedPanel, GroupRow } from '@/components/ui/grouped-rows';
 import { HeroTextField } from '@/components/ui/hero-text-field';
@@ -19,20 +20,23 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCurrentCouple } from '@/hooks/use-current-couple';
 import { useTaskActions } from '@/hooks/use-tasks';
+import { scheduleTaskNotification, taskReminderLabel } from '@/lib/tasks/notifications';
 import { taskErrorMessage } from '@/lib/tasks/errors';
-import { taskSchema } from '@/lib/validation/task';
+import { taskReminderOffsets, taskSchema } from '@/lib/validation/task';
 import { taskCategories, taskPriorities, type Task, type TaskInput } from '@/types/task';
 
 function valuesFromTask(task: Task): TaskInput {
-  return { title: task.title, description: task.description, due_at: task.due_at, priority: task.priority, category: task.category, visibility: task.visibility, couple_id: task.couple_id, assigned_to: task.assigned_to };
+  return { title: task.title, description: task.description, due_at: task.due_at, reminder_offset_minutes: task.reminder_offset_minutes, priority: task.priority, category: task.category, visibility: task.visibility, couple_id: task.couple_id, assigned_to: task.assigned_to };
 }
 function dueLabel(value: string | null) { return value ? format(new Date(value), 'MMM d') : 'None'; }
+function dueTimeLabel(value: string | null) { return value ? format(new Date(value), 'h:mm a') : 'Add time'; }
+function withDefaultTaskTime(day: Date, current: string | null) { const next = current ? new Date(current) : new Date(day); next.setFullYear(day.getFullYear(), day.getMonth(), day.getDate()); if (!current) next.setHours(9, 0, 0, 0); return next.toISOString(); }
 
 function TaskDueDateRow({ value, onChange, disabled }: { value: string | null; onChange: (value: string | null) => void; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => startOfMonth(value ? new Date(value) : new Date()));
   const days = eachDayOfInterval({ start: startOfWeek(month), end: endOfWeek(endOfMonth(month)) });
-  const choose = (date: Date | null) => { onChange(date ? date.toISOString() : null); setOpen(false); };
+  const choose = (date: Date | null) => { onChange(date ? withDefaultTaskTime(date, value) : null); setOpen(false); };
   return <>
     <GroupRow icon={CalendarDays} title="Due date" value={dueLabel(value)} accessibilityLabel="Choose due date" disabled={disabled} onPress={() => { setMonth(startOfMonth(value ? new Date(value) : new Date())); setOpen(true); }} />
     <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -54,16 +58,29 @@ export function TaskForm({ task }: { task?: Task }) {
   const { create, edit } = useTaskActions();
   const [baseline, setBaseline] = useState(task);
   const [expanded, setExpanded] = useState(!!task?.description || task?.priority === 'high');
-  const form = useForm<TaskInput>({ resolver: zodResolver(taskSchema), defaultValues: task ? valuesFromTask(task) : { title: '', description: '', due_at: null, priority: 'normal', category: 'Other', visibility: 'private', couple_id: null, assigned_to: userId } });
+  const [timeOpen, setTimeOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const form = useForm<TaskInput>({ resolver: zodResolver(taskSchema), defaultValues: task ? valuesFromTask(task) : { title: '', description: '', due_at: null, reminder_offset_minutes: null, priority: 'normal', category: 'Other', visibility: 'private', couple_id: null, assigned_to: userId } });
   const visibility = useWatch({ control: form.control, name: 'visibility' });
   const title = useWatch({ control: form.control, name: 'title' });
+  const dueAt = useWatch({ control: form.control, name: 'due_at' });
+  const reminderOffset = useWatch({ control: form.control, name: 'reminder_offset_minutes' });
   const busy = create.isPending || edit.isPending;
   const failure = create.error ?? edit.error;
   const creator = !baseline || baseline.created_by === userId;
   const people = [{ user_id: userId, name: 'You' }, ...(members.data ?? []).filter((member) => member.user_id !== userId)];
   const changedElsewhere = !!baseline && !!task && baseline.updated_at !== task.updated_at;
+  const ensureDueAt = () => {
+    const current = form.getValues('due_at');
+    if (current) return current;
+    const next = new Date();
+    next.setHours(9, 0, 0, 0);
+    const iso = next.toISOString();
+    form.setValue('due_at', iso, { shouldValidate: true });
+    return iso;
+  };
   const submit = form.handleSubmit((input) => {
-    const onSuccess = (saved: Task) => router.replace({ pathname: '/task/[id]', params: { id: saved.id } });
+    const onSuccess = async (saved: Task) => { const notification = await scheduleTaskNotification(saved, userId); router.replace({ pathname: '/task/[id]', params: { id: saved.id, notification } }); };
     if (baseline) edit.mutate({ task: baseline, input }, { onSuccess });
     else create.mutate(input, { onSuccess });
   });
@@ -89,7 +106,13 @@ export function TaskForm({ task }: { task?: Task }) {
       {(members.data?.length ?? 0) < 2 && !members.isPending && !members.isError && <Text variant="caption" tone="secondary">You can assign tasks to your partner once they join your space.</Text>}
     </>}
     <GroupedPanel>
-      <Controller control={form.control} name="due_at" render={({ field }) => <TaskDueDateRow value={field.value} onChange={field.onChange} disabled={busy} />} />
+      <Controller control={form.control} name="due_at" render={({ field }) => <TaskDueDateRow value={field.value} onChange={(value) => { field.onChange(value); if (!value) form.setValue('reminder_offset_minutes', null); }} disabled={busy} />} />
+      <GroupDivider />
+      <GroupRow icon={Clock3} title="Due time" value={dueTimeLabel(dueAt)} accessibilityLabel="Set due time" disabled={busy} onPress={() => { ensureDueAt(); setTimeOpen((open) => !open); }} trailing={<ChevronDown color={colors.muted} size={layout.iconSize} />} />
+      {timeOpen && <Controller control={form.control} name="due_at" render={({ field }) => <TimePicker label="Due time" value={field.value ?? ensureDueAt()} onChange={field.onChange} disabled={busy} autoOpen hideTrigger onDismiss={() => setTimeOpen(false)} />} />}
+      <GroupDivider />
+      <GroupRow icon={Bell} title="Alert" value={dueAt ? taskReminderLabel(reminderOffset) : 'Choose due date first'} accessibilityLabel="Set task alert" disabled={busy} onPress={() => { ensureDueAt(); setAlertOpen((open) => !open); }} trailing={<ChevronDown color={colors.muted} size={layout.iconSize} />} />
+      {alertOpen && <View style={styles.expanded}><Controller control={form.control} name="reminder_offset_minutes" render={({ field }) => <ChoiceChips label="Alert" value={field.value === null ? 'none' : String(field.value)} options={[{ value: 'none', label: 'No alert' }, ...taskReminderOffsets.map((value) => ({ value: String(value), label: taskReminderLabel(value) }))]} onChange={(value) => field.onChange(value === 'none' ? null : Number(value))} disabled={busy} />} /></View>}
       <GroupDivider />
       <GroupRow icon={SlidersHorizontal} title="More options" accessibilityLabel="More options" accessibilityState={{ expanded }} onPress={() => setExpanded(!expanded)} trailing={<ChevronDown color={colors.muted} size={layout.iconSize} />} />
       {expanded && <View style={styles.expanded}>

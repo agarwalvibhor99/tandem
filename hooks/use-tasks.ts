@@ -6,6 +6,7 @@ import { taskDateBounds } from '@/lib/tasks/filters';
 import { completionOptions, taskKeys, type CompletionChange } from '@/lib/tasks/optimistic';
 import { TASK_PAGE_SIZE } from '@/lib/tasks/api';
 import { getTaskApi } from '@/services/tasks';
+import { cancelTaskNotifications, scheduleTaskNotification } from '@/lib/tasks/notifications';
 import type { Task, TaskFilter, TaskInput } from '@/types/task';
 
 export function useTaskClock() {
@@ -39,8 +40,9 @@ export function useTaskActions() {
   const refresh = () => client.invalidateQueries({ queryKey: taskKeys.all(userId) });
   const create = useMutation({ mutationFn: (input: TaskInput) => getTaskApi().create(input), networkMode: 'always', onSuccess: refresh });
   const edit = useMutation({ mutationFn: ({ task, input }: { task: Task; input: TaskInput }) => getTaskApi().edit(task, input), networkMode: 'always', onSuccess: refresh });
-  const remove = useMutation({ mutationFn: (task: Task) => getTaskApi().remove(task), networkMode: 'always', onSuccess: refresh });
-  const complete = useMutation(completionOptions(client, userId, (task, status) => getTaskApi().complete(task, status)));
+  const remove = useMutation({ mutationFn: (task: Task) => getTaskApi().remove(task), networkMode: 'always', onSuccess: (_data, task) => { void cancelTaskNotifications(task.id); refresh(); } });
+  const completeOptions = completionOptions(client, userId, (task, status) => getTaskApi().complete(task, status));
+  const complete = useMutation({ ...completeOptions, onSuccess: (saved, change, context) => { completeOptions.onSuccess(saved); if (change.status === 'completed') void cancelTaskNotifications(change.task.id); else void scheduleTaskNotification(saved, userId); } });
   return { create, edit, remove, complete };
 }
 

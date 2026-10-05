@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { usePendingCompletions, useTaskActions } from '@/hooks/use-tasks';
 import { dueDateLabel } from '@/lib/tasks/dates';
+import { taskReminderLabel } from '@/lib/tasks/notifications';
 import { taskErrorMessage } from '@/lib/tasks/errors';
 import { projectTask } from '@/lib/tasks/optimistic';
 import type { Task } from '@/types/task';
@@ -32,6 +33,7 @@ function TaskDetail({ task }: { task: Task }) {
       <Text tone="secondary">{task.visibility === 'private' ? 'Private · Only you can see this' : 'Shared · Both of you can see this'}</Text>
       <AssigneeAvatar name={name} />
       <Text>{dueDateLabel(task.due_at)}</Text>
+      {task.due_at && <Text tone="secondary">Alert · {taskReminderLabel(task.reminder_offset_minutes)}</Text>}
       <Text tone="secondary">{task.category}</Text>
       <PriorityIndicator priority={task.priority} />
       {!!task.description && <Text>{task.description}</Text>}
@@ -52,6 +54,14 @@ function TaskDetail({ task }: { task: Task }) {
   </>;
 }
 export default function TaskDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  return <Screen standalone title="Task" description="The details, all in one place."><TaskLoader id={id}>{(task) => <TaskDetail task={task} />}</TaskLoader></Screen>;
+  const { id, notification } = useLocalSearchParams<{ id: string; notification?: string }>();
+  return <Screen standalone title="Task" description="The details, all in one place.">
+    {notification === 'scheduled' && <Notice message="Task saved. This device will alert you at the chosen time." />}
+    {notification === 'denied' && <Notice message="Task saved, but notifications are off. Enable them in your device settings when you want alerts." />}
+    {notification === 'unsupported' && <Notice message="Task saved. Local notifications are available in the native app, not in the browser." />}
+    {notification === 'past' && <Notice message="Task saved. Its alert time has passed, so no alert was scheduled." />}
+    {notification === 'limit' && <Notice message="Task saved. This device already has 100 Tandem task alerts scheduled. Complete a task before scheduling another." />}
+    {notification === 'unavailable' && <Notice message="Task saved, but this device couldn’t schedule its alert. You can try again by editing the task." />}
+    <TaskLoader id={id}>{(task) => <TaskDetail task={task} />}</TaskLoader>
+  </Screen>;
 }
