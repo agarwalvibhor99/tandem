@@ -8,11 +8,19 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Enter your password.').max(128, 'Password is too long.'),
 });
 
+export const forgotPasswordSchema = z.object({ email });
+
 export const signUpSchema = z.object({
   name: z.string().trim().min(1, 'Enter your name.').max(80, 'Use 80 characters or fewer.'),
   email,
   password: z.string().min(12, 'Use at least 12 characters.').max(128, 'Use 128 characters or fewer.'),
 });
 
+export const resetPasswordSchema = z.object({
+  password: z.string().min(12, 'Use at least 12 characters.').max(128, 'Use 128 characters or fewer.'),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type SignUpValues = z.infer<typeof signUpSchema>;

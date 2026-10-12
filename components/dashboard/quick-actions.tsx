@@ -1,8 +1,9 @@
 import { Bell, CalendarPlus, Coffee, ListPlus, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { borders, colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing, shadows } from '@/constants/theme';
 
 type Action = { label: string; icon: LucideIcon; href: '/task/new' | '/lists' | '/event/new' | '/expense/new' | '/reminder/new' | '/date/new' };
 const actions: Action[] = [
@@ -18,16 +19,16 @@ export function QuickActions() {
     <Text variant="label" accessibilityRole="header">Quick actions</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions} accessibilityLabel="Quick actions">
       {actions.map(({ label, icon: Icon, href }) => {
-        return <Pressable key={label} accessibilityRole="button" accessibilityLabel={label} onPress={() => router.push(href)} style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+        return <PressableScale key={label} accessibilityRole="button" accessibilityLabel={label} onPress={() => router.push(href)} style={styles.action} pressedStyle={styles.pressed}>
           <Icon size={layout.iconSize} strokeWidth={1.5} color={colors.accent} />
           <Text variant="label">{label}</Text>
-        </Pressable>;
+        </PressableScale>;
       })}
     </ScrollView>
   </View>;
 }
 const styles = StyleSheet.create({
   section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border },
-  pressed: { backgroundColor: colors.togetherSoft },
+  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border, ...shadows.soft },
+  pressed: { backgroundColor: colors.accentSoft },
 });

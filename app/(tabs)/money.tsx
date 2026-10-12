@@ -2,7 +2,7 @@ import { format, parseISO } from 'date-fns';
 import { router } from 'expo-router';
 import { ChevronRight, Wallet } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { ChoiceChips } from '@/components/ui/choice-chips';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useExpenseSummary, useExpenses } from '@/hooks/use-expenses';
 import { categoryBreakdown, costTier, expenseTotal, expensesInPeriod, payerBreakdown, periodLabel, type ExpensePeriod } from '@/lib/expenses/analytics';
+import { expenseExportFilename, expensesToCsv } from '@/lib/expenses/export';
 import { filterExpenses } from '@/lib/expenses/filters';
 import { expenseCategories, type Expense, type ExpenseCategory, type ExpenseVisibility } from '@/types/expense';
 
@@ -39,6 +40,9 @@ export default function MoneyScreen() {
   const [period, setPeriod] = useState<ExpensePeriod>('month');
   const [expenseName, setExpenseName] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'all'>('all');
+  const [exporting, setExporting] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const selectedView: ExpenseVisibility = connected ? view : 'private';
   const summary = useExpenseSummary(selectedView);
   const history = useExpenses(selectedView);
@@ -63,6 +67,38 @@ export default function MoneyScreen() {
   const topPayer = payers[0];
   const filtersActive = !!expenseName.trim() || categoryFilter !== 'all';
   const clearFilters = () => { setExpenseName(''); setCategoryFilter('all'); };
+  const exportExpenses = async () => {
+    setExportNotice(null);
+    setExportError(null);
+    if (filteredExpenses.length === 0) {
+      setExportError(filtersActive ? 'No matching expenses to export.' : 'Add an expense before exporting.');
+      return;
+    }
+
+    const csv = expensesToCsv(filteredExpenses, nameFor);
+    const filename = expenseExportFilename(selectedView);
+    try {
+      setExporting(true);
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        await Share.share({ title: filename, message: csv });
+      }
+      setExportNotice(`Exported ${filteredExpenses.length} ${filteredExpenses.length === 1 ? 'expense' : 'expenses'}.`);
+    } catch {
+      setExportError('We couldn’t export expenses. Try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return <Screen title="Money" description="A clear view of what you spend, alone or together." refreshing={refreshing} onRefresh={refresh} headerAction={<Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={newExpense} style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}><Wallet color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></Pressable>}>
     <VisibilitySelector label="Spending" value={selectedView} sharedAvailable={connected} showUnavailableShared sharedLabel="Couple" onChange={setView} />
@@ -101,7 +137,15 @@ export default function MoneyScreen() {
     </Surface>
 
     <View style={styles.history}>
-      <Text variant="heading" accessibilityRole="header">Recent expenses</Text>
+      <View style={styles.historyHeader}>
+        <View style={styles.historyTitle}>
+          <Text variant="heading" accessibilityRole="header">Recent expenses</Text>
+          <Text variant="caption" tone="secondary">Export uses the visible filters.</Text>
+        </View>
+        <Button label="Export" variant="quiet" size="compact" loading={exporting} disabled={history.query.isPending} onPress={() => void exportExpenses()} />
+      </View>
+      {exportNotice && <Notice message={exportNotice} />}
+      {exportError && <Notice error message={exportError} />}
       <FormField label="Search expenses" placeholder="Search by name" value={expenseName} onChangeText={setExpenseName} autoCapitalize="none" autoCorrect={false} returnKeyType="search" />
       <ChoiceChips label="Category" value={categoryFilter} options={[{ value: 'all', label: 'All' }, ...expenseCategories.map((category) => ({ value: category, label: category }))]} onChange={setCategoryFilter} />
       {history.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading expenses" />}
@@ -133,6 +177,8 @@ const styles = StyleSheet.create({
   barTrack: { height: layout.spendingBarHeight, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radii.pill, backgroundColor: colors.accent },
   history: { gap: spacing.md },
+  historyHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  historyTitle: { flex: 1, gap: spacing.xs },
   expense: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.minTouchTarget, paddingVertical: spacing.sm, borderBottomWidth: 1, borderColor: colors.border },
   costDot: { width: layout.spendingMarkerWidth, height: layout.spendingMarkerHeight, borderRadius: radii.pill },
   dotSmall: { backgroundColor: colors.success },

@@ -47,6 +47,7 @@ export default function LoginScreen() {
         {errors.root?.message && <Notice error message={errors.root.message} />}
         <Button label="Log in" loading={isSubmitting} disabled={disabled} onPress={() => void submit()} />
       </Surface>
+      {!isSubmitting && <AuthLink href="/forgot-password" label="Forgot password?" />}
       {!isSubmitting && <AuthLink href="/sign-up" label="New to Tandem? Create an account" />}
       {!isSubmitting && <AuthLink href="/welcome" label="Back to welcome" />}
     </Screen>

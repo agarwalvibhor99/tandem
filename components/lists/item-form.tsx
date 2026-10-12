@@ -106,7 +106,7 @@ export function ItemForm({ listId, type, item, onSaved, compact = false, initial
       <Controller control={form.control} name="notes" render={({ field, fieldState }) => <FormField label="Notes" placeholder="Size, brand or anything useful" multiline numberOfLines={3} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} editable={!busy} maxLength={2000} />} />
     </>}
     {(add.error || edit.error) && <Notice error message={listErrorMessage(add.error ?? edit.error)} />}
-    {!compact && <Button label={item ? 'Save changes' : 'Save item'} loading={busy} disabled={changedElsewhere} onPress={() => void submit()} />}
+    {!compact && <Button label={item ? 'Save changes' : 'Save item'} size="large" loading={busy} disabled={changedElsewhere} onPress={() => void submit()} />}
     {compact && <Text variant="caption" tone="secondary">Both of you can add to this list.</Text>}
   </>;
 }

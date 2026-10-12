@@ -7,6 +7,7 @@ import { consumeConfirmationReturn } from '@/lib/auth/confirmation-return';
 import { getSupabaseEnvironment } from '@/lib/environment';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { LoginValues, SignUpValues } from '@/lib/validation/auth';
+import type { ForgotPasswordValues, ResetPasswordValues } from '@/lib/validation/auth';
 import { createAuthService } from '@/services/auth';
 
 type State = AuthState | { status: 'unconfigured'; session: null };
@@ -14,6 +15,8 @@ type AuthContextValue = State & {
   notice: string | null;
   login(values: LoginValues): Promise<void>;
   signUp(values: SignUpValues): Promise<'signedIn' | 'confirmEmail'>;
+  sendPasswordReset(values: ForgotPasswordValues, redirectTo?: string): Promise<void>;
+  updatePassword(values: ResetPasswordValues): Promise<void>;
   logout(): Promise<void>;
   retry(): void;
 };
@@ -81,6 +84,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return runtime.current.service.signUp(values);
   }, []);
 
+  const sendPasswordReset = useCallback(async (values: ForgotPasswordValues, redirectTo?: string) => {
+    if (!runtime.current) throw new Error('Authentication is unavailable.');
+    setNotice(null);
+    await runtime.current.service.sendPasswordReset(values, redirectTo);
+  }, []);
+
+  const updatePassword = useCallback(async (values: ResetPasswordValues) => {
+    if (!runtime.current) throw new Error('Authentication is unavailable.');
+    setNotice(null);
+    await runtime.current.service.updatePassword(values);
+  }, []);
+
   const logout = useCallback(async () => {
     if (!runtime.current) return;
     try {
@@ -96,7 +111,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
-  const value = useMemo(() => ({ ...state, notice, login, signUp, logout, retry }), [state, notice, login, signUp, logout, retry]);
+  const value = useMemo(() => ({ ...state, notice, login, signUp, sendPasswordReset, updatePassword, logout, retry }), [state, notice, login, signUp, sendPasswordReset, updatePassword, logout, retry]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

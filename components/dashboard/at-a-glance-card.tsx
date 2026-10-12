@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { ArrowUpRight, ListChecks, ShoppingBasket, Wallet } from 'lucide-react-native';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { DashboardCard } from '@/components/dashboard/dashboard-card';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { colors, layout, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 import type { ExpenseSummary, ExpenseVisibility } from '@/types/expense';
 
 type Metric = { label: string; detail: string; href: '/tasks' | '/lists' | '/money'; loading: boolean; error: boolean; onRetry: () => void; icon: typeof ListChecks };
@@ -20,11 +21,18 @@ export function AtAGlanceCard({ sharedCount, sharedLoading, sharedError, onShare
     { label: spendingVisibility === 'shared' ? 'Shared spending' : 'Personal spending', detail: `${money(spending?.totalAmount ?? 0)} this month`, href: '/money', loading: spendingLoading, error: spendingError, onRetry: onSpendingRetry, icon: Wallet },
   ];
   return <DashboardCard title="At a glance" compact>
-    {metrics.map(({ label, detail, href, loading, error, onRetry, icon: Icon }) => <Pressable key={label} accessibilityRole="button" accessibilityLabel={`${label}: ${error ? 'unavailable, retry' : loading ? 'loading' : detail}`} onPress={error ? onRetry : () => router.push(href)} style={styles.row}>
-      <Icon color={colors.accent} size={layout.iconSize} strokeWidth={1.5} />
+    <View style={styles.grid}>
+    {metrics.map(({ label, detail, href, loading, error, onRetry, icon: Icon }) => <PressableScale key={label} accessibilityRole="button" accessibilityLabel={`${label}: ${error ? 'unavailable, retry' : loading ? 'loading' : detail}`} onPress={error ? onRetry : () => router.push(href)} style={styles.row}>
+      <View style={styles.icon}><Icon color={colors.accent} size={layout.iconSize} strokeWidth={1.5} /></View>
       <View style={styles.copy}><Text variant="label">{label}</Text><Text variant="caption" tone="secondary">{error ? 'Unavailable · Tap to retry' : loading ? 'Loading…' : detail}</Text></View>
       {loading ? <ActivityIndicator color={colors.accent} /> : <ArrowUpRight color={colors.textSecondary} size={layout.iconSize} strokeWidth={1.5} />}
-    </Pressable>)}
+    </PressableScale>)}
+    </View>
   </DashboardCard>;
 }
-const styles = StyleSheet.create({ row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.minTouchTarget }, copy: { flex: 1, gap: spacing.xs } });
+const styles = StyleSheet.create({
+  grid: { gap: spacing.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.dashboardRowHeight, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted, borderWidth: borders.thin, borderColor: colors.border },
+  icon: { width: 40, height: 40, borderRadius: radii.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  copy: { flex: 1, gap: spacing.xs },
+});

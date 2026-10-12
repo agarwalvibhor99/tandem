@@ -26,7 +26,7 @@ export default function NewListScreen() {
   const name = useWatch({ control: form.control, name: 'name' });
   const submit = form.handleSubmit((value) => create.mutate({ ...value, couple_id: couple.data?.id ?? '' }, { onSuccess: (list) => router.replace({ pathname: '/list/[id]', params: { id: list.id } }) }));
 
-  return <Screen standalone title="New list" description="">
+  return <Screen standalone title="New list" description="Start with the kind of list, then give it a name if needed.">
     <View style={styles.form}>
       <Controller control={form.control} name="name" render={({ field: { ref, onChange, onBlur, value }, fieldState }) => <View style={styles.hero}>
         <HeroTextField ref={ref} accessibilityLabel="What list do you need?" placeholder={type === 'Custom' ? 'What list do you need?' : defaultNames[type]} value={value} onChangeText={onChange} onBlur={onBlur} editable={!create.isPending} maxLength={100} autoCapitalize="sentences" returnKeyType="done" />
@@ -38,7 +38,7 @@ export default function NewListScreen() {
       </View>} />
       {!couple.data && <Notice message="Create a shared space before making lists together." />}
       {create.error && <Notice error message={listErrorMessage(create.error)} />}
-      <Button label="Create list" loading={create.isPending} disabled={!couple.data || !name?.trim()} onPress={() => void submit()} />
+      <Button label="Create list" size="large" loading={create.isPending} disabled={!couple.data || !name?.trim()} onPress={() => void submit()} />
     </View>
   </Screen>;
 }

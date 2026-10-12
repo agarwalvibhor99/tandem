@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
-import { Pressable, StyleSheet, View, type PressableProps } from 'react-native';
+import { StyleSheet, View, type PressableProps } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 
@@ -14,13 +15,14 @@ export function CompactAction({ label, description, icon: Icon, disabled, ...pro
   const isDisabled = !!disabled;
 
   return (
-    <Pressable
+    <PressableScale
       {...props}
       accessibilityRole="button"
       accessibilityLabel={props.accessibilityLabel ?? label}
       accessibilityState={{ ...props.accessibilityState, disabled: isDisabled }}
       disabled={isDisabled}
-      style={({ pressed }) => [styles.action, pressed && styles.pressed, isDisabled && styles.disabled]}
+      pressedStyle={styles.pressed}
+      style={[styles.action, isDisabled && styles.disabled]}
     >
       <View style={styles.icon}>
         <Icon color={colors.accent} size={layout.iconSize} strokeWidth={borders.strong} />
@@ -29,7 +31,7 @@ export function CompactAction({ label, description, icon: Icon, disabled, ...pro
         <Text variant="label">{label}</Text>
         {description ? <Text variant="caption" tone="secondary">{description}</Text> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.chip,
     borderWidth: borders.thin,
     borderColor: colors.border,
   },
@@ -57,6 +59,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   copy: { flex: 1 },
-  pressed: { backgroundColor: colors.surfaceMuted },
+  pressed: { opacity: 0.76 },
   disabled: { opacity: 0.5 },
 });

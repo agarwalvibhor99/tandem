@@ -123,7 +123,7 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
     {notesOpen ? <Controller control={form.control} name="notes" render={({ field, fieldState }) => <FormField label="Note" placeholder="Anything useful to remember" multiline numberOfLines={3} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} maxLength={2000} editable={!busy} />} /> : <Button label="+ Add a note" variant="quiet" onPress={() => setNotesOpen(true)} />}
     <View style={styles.summary}><Text variant="heading">{summary}</Text></View>
     {create.error && <Notice error message={expenseErrorMessage(create.error)} />}
-    <Button label="Save expense" loading={busy} disabled={amountCents <= 0} onPress={() => void submit()} />
+    <Button label="Save expense" size="large" loading={busy} disabled={amountCents <= 0} onPress={() => void submit()} />
   </View>;
 }
 

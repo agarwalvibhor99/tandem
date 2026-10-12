@@ -13,10 +13,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarActiveBackgroundColor: colors.togetherSoft,
+        tabBarActiveBackgroundColor: colors.accentSoft,
         tabBarLabelStyle: typography.tab,
         tabBarIconStyle: { marginTop: spacing.xs },
-        tabBarItemStyle: { paddingTop: spacing.xs, paddingBottom: spacing.md, borderRadius: radii.md, marginVertical: spacing.xs },
+        tabBarItemStyle: { paddingTop: spacing.xs, paddingBottom: spacing.sm, borderRadius: radii.lg, marginVertical: spacing.xs },
         tabBarStyle: {
           height: layout.tabBarHeight + insets.bottom,
           paddingHorizontal: spacing.sm,
@@ -24,6 +24,7 @@ export default function TabLayout() {
           paddingBottom: Math.max(insets.bottom, spacing.sm),
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          borderTopWidth: 1,
         },
       }}
     >

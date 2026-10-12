@@ -3,8 +3,8 @@ import { StyleSheet } from 'react-native';
 
 import { colors, layout, spacing, typography } from '@/constants/theme';
 
-export function AuthLink({ href, label }: { href: Href; label: string }) {
-  return <Link href={href} replace style={styles.link}>{label}</Link>;
+export function AuthLink({ href, label }: { href: Href | string; label: string }) {
+  return <Link href={href as Href} replace style={styles.link}>{label}</Link>;
 }
 
 const styles = StyleSheet.create({

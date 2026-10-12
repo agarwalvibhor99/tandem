@@ -17,7 +17,7 @@ export function Text({ variant = 'body', tone = 'default', style, ...props }: Pr
 }
 
 const styles = StyleSheet.create({
-  base: { flexShrink: 1 },
+  base: { flexShrink: 1, letterSpacing: 0 },
   default: { color: colors.text },
   secondary: { color: colors.textSecondary },
   accent: { color: colors.accent },

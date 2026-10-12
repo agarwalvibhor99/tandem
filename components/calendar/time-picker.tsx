@@ -1,13 +1,14 @@
 import { format } from 'date-fns';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { FormField } from '@/components/ui/form-field';
 import { Notice } from '@/components/ui/notice';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { borders, colors, layout, radii, spacing } from '@/constants/theme';
+import { borders, colors, layout, radii, shadows, spacing } from '@/constants/theme';
 
 const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
 const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0'));
@@ -38,9 +39,9 @@ function PickerColumn({ label, value, options, onChange }: { label: string; valu
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.columnContent} accessibilityLabel={label}>
       {options.map((option) => {
         const selected = option === value;
-        return <Pressable key={option} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => onChange(option)} style={[styles.option, selected && styles.selectedOption]}>
+        return <PressableScale key={option} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => onChange(option)} style={[styles.option, selected && styles.selectedOption]}>
           <Text variant={selected ? 'heading' : 'body'} tone={selected ? 'accent' : 'secondary'}>{option}</Text>
-        </Pressable>;
+        </PressableScale>;
       })}
     </ScrollView>
   </View>;
@@ -93,7 +94,7 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
   return <View style={hideTrigger ? styles.hiddenGroup : styles.group}>
     {!hideTrigger && <><Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} /></>}
     <Dialog visible={open} title={label} onClose={close}>
-      <Text tone="secondary">Scroll to choose a common time, or type an exact minute.</Text>
+      <Text tone="secondary">Scroll to choose a time. Use exact minute only when you need it.</Text>
       <View style={styles.pickerFrame}>
         <PickerColumn label="Hour" value={hour} options={hourOptions} onChange={setHour} />
         <PickerColumn label="Minute" value={minute} options={minuteOptions} onChange={(next) => { setMinute(next); setExactMinute(next); }} />
@@ -109,17 +110,18 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
         placeholder="00"
       />
       {error && <Notice error message={error} />}
-      <Button label="Set time" onPress={save} /><Button label="Cancel" variant="secondary" onPress={close} />
+      <View style={styles.actions}><Button label="Set time" onPress={save} grow /><Button label="Cancel" variant="secondary" onPress={close} grow /></View>
     </Dialog>
   </View>;
 }
 const styles = StyleSheet.create({
   group: { gap: spacing.lg },
   hiddenGroup: { height: 0, overflow: 'hidden' },
-  pickerFrame: { height: layout.pickerHeight, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.chip, padding: spacing.sm },
+  pickerFrame: { height: layout.pickerHeight, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted, padding: spacing.sm, borderWidth: borders.thin, borderColor: colors.border, ...shadows.soft },
   column: { flex: 1, gap: spacing.xs },
   columnLabel: { textAlign: 'center' },
   columnContent: { paddingVertical: spacing.xl, gap: spacing.xs },
   option: { minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md },
-  selectedOption: { backgroundColor: colors.accentSoft, borderWidth: borders.strong, borderColor: colors.accent },
+  selectedOption: { backgroundColor: colors.surface, borderWidth: borders.strong, borderColor: colors.accent },
+  actions: { flexDirection: 'row', gap: spacing.sm },
 });

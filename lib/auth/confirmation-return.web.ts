@@ -2,6 +2,8 @@
 export function consumeConfirmationReturn(): string | null {
   const url = new URL(window.location.href);
   const fragment = new URLSearchParams(url.hash.slice(1));
+  const type = url.searchParams.get('type') ?? fragment.get('type');
+  if (url.pathname.includes('reset-password') || type === 'recovery') return null;
   const failed = url.searchParams.has('error') || fragment.has('error');
   const hasAuthReturn = failed || url.searchParams.has('code') || fragment.has('access_token');
   if (!hasAuthReturn) return null;

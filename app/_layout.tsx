@@ -61,6 +61,7 @@ function AuthenticatedNavigation() {
         <Stack.Screen name="date" />
         <Stack.Screen name="date-planner" />
       </Stack.Protected>
+      <Stack.Screen name="reset-password" />
       <Stack.Screen name="+not-found" />
     </Stack>
     </DateIdeaSyncProvider>

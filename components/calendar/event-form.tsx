@@ -96,7 +96,7 @@ export function EventForm({ event }: { event?: CalendarEvent }) {
     </GroupedPanel>
     {(conflictError ?? conflictMessage) && <Notice error message={conflictError ?? conflictMessage ?? ''} />}
     {(create.error || edit.error) && <Notice error message={calendarErrorMessage(create.error ?? edit.error)} />}
-    <Button label={event ? 'Save changes' : 'Add event'} loading={busy} disabled={changedElsewhere || (!!event && event.owner_id !== userId) || !title?.trim()} onPress={() => void submit()} />
+    <Button label={event ? 'Save changes' : 'Add event'} size="large" loading={busy} disabled={changedElsewhere || (!!event && event.owner_id !== userId) || !title?.trim()} onPress={() => void submit()} />
   </View>;
 }
 

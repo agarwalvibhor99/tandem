@@ -108,7 +108,7 @@ export function TaskForm({ task }: { task?: Task }) {
       </View>}
     </GroupedPanel>
     {failure && <Notice error message={taskErrorMessage(failure)} />}
-    <Button label={baseline ? 'Save changes' : 'Create task'} loading={busy} disabled={changedElsewhere || !title?.trim()} onPress={() => void submit()} />
+    <Button label={baseline ? 'Save changes' : 'Create task'} size="large" loading={busy} disabled={changedElsewhere || !title?.trim()} onPress={() => void submit()} />
   </View>;
 }
 

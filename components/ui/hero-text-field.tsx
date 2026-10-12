@@ -7,5 +7,13 @@ export const HeroTextField = forwardRef<TextInput, TextInputProps>(function Hero
 });
 
 const styles = StyleSheet.create({
-  input: { ...typography.heroInput, color: colors.text, borderBottomWidth: borders.strong, borderBottomColor: colors.line, minHeight: layout.heroFieldHeight, paddingTop: spacing.xl, paddingBottom: spacing.md },
+  input: {
+    ...typography.heroInput,
+    color: colors.text,
+    borderBottomWidth: borders.strong,
+    borderBottomColor: colors.line,
+    minHeight: layout.heroFieldHeight,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+  },
 });
