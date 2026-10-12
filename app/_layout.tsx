@@ -1,3 +1,4 @@
+import '@/lib/notifications/setup';
 import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator } from 'react-native';

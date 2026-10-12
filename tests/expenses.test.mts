@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { calculateCoupleBalance, calculateCustomSplit, calculateEqualSplit, calculateOnePayerSplit, toCents, userNetPositions } from '../lib/expenses/calculations.ts';
 import { filterExpenses } from '../lib/expenses/filters.ts';
 import { escapeCsvValue, expenseExportFilename, expensesToCsv } from '../lib/expenses/export.ts';
+import { expenseIdSet, newPartnerExpenses } from '../lib/expenses/changes.ts';
 
 test('splits an odd cent deterministically while preserving the total', () => {
   assert.deepEqual(calculateEqualSplit(101, ['alex', 'sam']), [{ userId: 'alex', amountCents: 51 }, { userId: 'sam', amountCents: 50 }]);
@@ -65,4 +66,17 @@ test('csv export names files by visibility and date', () => {
   assert.equal(escapeCsvValue('plain value'), 'plain value');
   assert.equal(escapeCsvValue('one,two'), '"one,two"');
   assert.equal(expenseExportFilename('private', new Date('2026-10-11T12:00:00Z')), 'tandem-private-expenses-2026-10-11.csv');
+});
+
+
+test('detects only newly added partner expenses for notifications', () => {
+  const known = expenseIdSet([{ id: 'old-shared' } as const]);
+  const latest = [
+    { id: 'old-shared', created_by: 'partner' },
+    { id: 'new-own', created_by: 'me' },
+    { id: 'new-partner', created_by: 'partner' },
+  ];
+
+  assert.deepEqual(newPartnerExpenses(latest, known, 'me'), [latest[2]]);
+  assert.deepEqual(newPartnerExpenses(latest, null, 'me'), []);
 });
