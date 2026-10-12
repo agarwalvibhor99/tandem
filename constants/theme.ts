@@ -46,7 +46,15 @@ export const colorTokens = { light: lightTokens, dark: darkTokens } as const;
 export type ColorScheme = keyof typeof colorTokens;
 export type ColorToken = keyof typeof lightTokens;
 
-const scheme: ColorScheme = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+function storedThemePreference(): ColorScheme | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = window.localStorage.getItem('tandem.theme.preference');
+    return value === 'light' || value === 'dark' ? value : null;
+  } catch { return null; }
+}
+
+const scheme: ColorScheme = storedThemePreference() ?? (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light');
 const tokens = colorTokens[scheme];
 
 export const colors = {

@@ -2,9 +2,10 @@ import { ConnectionCard } from '@/components/couples/connection-card';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, Coffee, Settings, UserRound, X } from 'lucide-react-native';
+import { Bell, ChevronRight, Coffee, Moon, Settings, Sun, UserRound, X } from 'lucide-react-native';
 
 import { Button } from '@/components/ui/button';
+import { ChoiceChips } from '@/components/ui/choice-chips';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
@@ -13,6 +14,7 @@ import { borders, colors, layout, radii, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfile } from '@/hooks/use-profile';
 import { authErrorMessage } from '@/lib/auth/errors';
+import { applyThemePreference, getThemePreference, reloadForThemeChange, type ThemePreference } from '@/lib/theme/preference';
 
 type MoreRowProps = {
   title: string;
@@ -42,6 +44,13 @@ export default function MoreScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => getThemePreference());
+
+  function changeThemePreference(preference: ThemePreference) {
+    setThemePreference(preference);
+    applyThemePreference(preference);
+    reloadForThemeChange();
+  }
 
   async function logout() {
     setLoggingOut(true);
@@ -98,6 +107,18 @@ export default function MoreScreen() {
                 </View>
               </View>
             )}
+            <View style={styles.settingBlock}>
+              <View style={styles.settingHeader}>
+                <View style={styles.icon}>
+                  {themePreference === 'dark' ? <Moon color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /> : <Sun color={colors.accent} size={layout.iconSize} strokeWidth={1.75} />}
+                </View>
+                <View style={styles.rowCopy}>
+                  <Text variant="heading">Appearance</Text>
+                  <Text variant="caption" tone="secondary">Choose how Tandem looks on this device.</Text>
+                </View>
+              </View>
+              <ChoiceChips label="Theme" value={themePreference} options={[{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} onChange={changeThemePreference} />
+            </View>
             {error && <Notice error message={error} />}
             <Button label="Log out" variant="quiet" loading={loggingOut} onPress={() => void logout()} />
           </Surface>
@@ -137,6 +158,8 @@ const styles = StyleSheet.create({
   },
   rowCopy: { flex: 1, gap: spacing.xs },
   accountRow: { minHeight: layout.listRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  settingBlock: { gap: spacing.md, paddingVertical: spacing.md, borderTopWidth: borders.thin, borderColor: colors.border },
+  settingHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   backdrop: {
     flex: 1,
     justifyContent: 'flex-end',
