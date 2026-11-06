@@ -49,6 +49,7 @@ export default function DatePlannerScreen() {
   const calendar = useCalendarWindow(startDay, addDays(startDay, 1), connected);
   const ready = connected && ideas.query.isSuccess && calendar.isSuccess;
   const blocks = plan && ready ? sharedFreeTimeForEntries(calendar.data, userId, partner.user_id, new Date(plan.start_at), new Date(plan.end_at), 30) : [];
+  const nameFor = (id: string | null) => !id ? 'Someone' : id === userId ? 'You' : members.data?.find((member) => member.user_id === id)?.name ?? 'Partner';
   const matches = plan && ready ? recommendDateIdeas(ideas.query.data ?? [], blocks, { budget: plan.budget, category: plan.category, mood: plan.mood }) : [];
   const submit = form.handleSubmit((values) => setPlan(values));
   return <Screen standalone title="Plan a date" description="Find an idea that fits the time you have together.">
@@ -67,7 +68,7 @@ export default function DatePlannerScreen() {
       <Button label="Find a plan" onPress={() => void submit()} disabled={!ready} />
       {plan && ready && <>
         <Surface><Text variant="heading">Time together</Text>{blocks.length ? <Text tone="secondary">You’re both free {blocks.map((block) => `${format(block.start, 'h:mm a')}–${format(block.end, 'h:mm a')}`).join(', ')}.</Text> : <Text tone="secondary">No common free time in this window. Try a wider time or another day.</Text>}</Surface>
-        {!!matches.length ? <><Text variant="title" accessibilityRole="header">Ideas that fit</Text><View style={styles.results}>{matches.slice(0, 5).map(({ idea, slot }) => <View key={idea.id} style={styles.result}><DateIdeaCard idea={idea} /><Text variant="caption" tone="secondary">Fits {format(slot.start, 'h:mm a')}–{format(slot.end, 'h:mm a')}</Text></View>)}</View></> : !!blocks.length && <Surface><Text variant="heading">No saved ideas fit yet</Text><Text tone="secondary">Try a different budget or mood, or save an idea that fits this window.</Text><Button label="Save an idea" onPress={() => router.push('/date/new')} /></Surface>}
+        {!!matches.length ? <><Text variant="title" accessibilityRole="header">Ideas that fit</Text><View style={styles.results}>{matches.slice(0, 5).map(({ idea, slot }) => <View key={idea.id} style={styles.result}><DateIdeaCard idea={idea} creator={nameFor(idea.created_by)} /><Text variant="caption" tone="secondary">Fits {format(slot.start, 'h:mm a')}–{format(slot.end, 'h:mm a')}</Text></View>)}</View></> : !!blocks.length && <Surface><Text variant="heading">No saved ideas fit yet</Text><Text tone="secondary">Try a different budget or mood, or save an idea that fits this window.</Text><Button label="Save an idea" onPress={() => router.push('/date/new')} /></Surface>}
       </>}
     </>}
   </Screen>;

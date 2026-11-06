@@ -14,6 +14,8 @@ import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
+import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useDateIdeaActions, useDateIdeas } from '@/hooks/use-date-ideas';
 import { dateIdeaErrorMessage } from '@/lib/dates/errors';
 import { dateCategories, dateCategoryLabel, dateCostLabel, dateCostLevels, dateStatuses, dateStatusLabel, type DateCategory, type DateStatus } from '@/types/date-idea';
@@ -21,6 +23,8 @@ import { dateCategories, dateCategoryLabel, dateCostLabel, dateCostLevels, dateS
 type DurationFilter = 'any' | 'short' | 'medium' | 'long';
 export default function DatesScreen() {
   const ideas = useDateIdeas();
+  const userId = useAuth().session?.user.id ?? '';
+  const members = useCoupleMembers();
   const { setStatus } = useDateIdeaActions();
   const [status, chooseStatus] = useState<DateStatus | 'all'>('want_to_do');
   const [category, chooseCategory] = useState<DateCategory | 'any'>('any');
@@ -28,6 +32,7 @@ export default function DatesScreen() {
   const [duration, chooseDuration] = useState<DurationFilter>('any');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const connected = !!ideas.couple.data;
+  const nameFor = (id: string | null) => !id ? 'Someone' : id === userId ? 'You' : members.data?.find((member) => member.user_id === id)?.name ?? 'Partner';
   const rows = (ideas.query.data ?? []).filter((idea) => (status === 'all' || idea.status === status)
     && (category === 'any' || idea.category === category)
     && (cost === 'any' || idea.cost_level <= Number(cost))
@@ -57,7 +62,7 @@ export default function DatesScreen() {
       {setStatus.error && <Notice error message={dateIdeaErrorMessage(setStatus.error)} />}
       {ideas.query.isSuccess && !ideas.query.data.length && <EmptyState title="Your next favorite thing starts here" description="Save a restaurant, a walk, a movie, or a little plan at home. You can decide when to go later." action={{ label: 'Save your first idea', onPress: () => router.push('/date/new') }} />}
       {ideas.query.isSuccess && !!ideas.query.data.length && !rows.length && <EmptyState title="No ideas match these filters" description="Try a different budget, duration, category, or status." action={{ label: 'Show all ideas', onPress: () => { chooseStatus('all'); chooseCategory('any'); chooseCost('any'); chooseDuration('any'); } }} />}
-      {rows.map((idea) => <DateIdeaCard key={idea.id} idea={idea} saving={setStatus.isPending && setStatus.variables?.idea.id === idea.id} onDone={idea.status === 'done' ? undefined : () => setStatus.mutate({ idea, status: 'done' })} />)}
+      {rows.map((idea) => <DateIdeaCard key={idea.id} idea={idea} creator={nameFor(idea.created_by)} saving={setStatus.isPending && setStatus.variables?.idea.id === idea.id} onDone={idea.status === 'done' ? undefined : () => setStatus.mutate({ idea, status: 'done' })} />)}
       {ideas.query.isSuccess && ideas.query.data.length === 200 && <Text variant="caption" tone="secondary">Showing the 200 most recently saved ideas.</Text>}
     </>}
   </Screen>;

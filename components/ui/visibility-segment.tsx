@@ -19,8 +19,8 @@ export function VisibilitySegment({ value, onChange, sharedAvailable, showShared
 }
 
 const styles = StyleSheet.create({
-  segment: { flexDirection: 'row', borderRadius: radii.pill, backgroundColor: colors.chip, padding: spacing.xs, gap: spacing.xs },
-  item: { flex: 1, minHeight: layout.fieldHeight, borderRadius: radii.pill, borderWidth: borders.strong, borderColor: colors.chip, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  selected: { backgroundColor: colors.surface, borderColor: colors.accent },
+  segment: { flexDirection: 'row', borderRadius: radii.md, backgroundColor: colors.chip, padding: spacing.xs, gap: spacing.xs },
+  item: { flex: 1, minHeight: layout.minTouchTarget, borderRadius: radii.md, borderWidth: borders.strong, borderColor: colors.chip, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  selected: { backgroundColor: colors.surface, borderColor: colors.surface },
   disabled: { opacity: 0.45 },
 });

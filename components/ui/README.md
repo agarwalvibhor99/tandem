@@ -40,3 +40,23 @@ Do not add hover-only tooltips: important help needs to work with touch and scre
 - Task and reminder cards had identical container, title, metadata, and saving styles. Both now use `CheckableCard`. Lists, Tasks, and Reminders now use the same `Checkbox` target.
 
 Feature-specific loading and error markup remains where the recovery action or the card content differs. Preserve calculated values such as chart bar widths as dynamic styles.
+
+
+## Reference visual language
+
+The shared theme follows the Tandem first-run reference: ivory backgrounds, forest-green actions,
+sage panels, peach partner accents, a serif wordmark and editorial home greeting. Dark mode retains
+those semantic roles. All feature screens inherit the same `Screen`, `Surface`, inputs and buttons.
+
+- `Brand`: the app wordmark; use in screen mastheads, not inside feature cards.
+- `SegmentedControl`: two or three view/period choices. Use `ChoiceChips` for longer, wrapping sets.
+- `Dialog`: centered `dialog` or bottom `sheet`, both with visible close actions and backdrop dismissal.
+- `Navigation`: Today, Calendar, Quick add, Lists and Money. Tasks is available in Today and More;
+  More/settings is in each primary screen's masthead. Existing routes and deep links are retained.
+- `QuickActions`: one wrapping action grid for the capture sheet; labels never scroll offscreen.
+- `PartnerStatusCard`: compact, actionable connection strip, including loading/retry/disconnected states.
+- `AtAGlanceCard`: four overview tiles using dashboard query data. No child fetches or sample counts.
+- `NextPlanCard`: the next available event today, using the privacy-filtered calendar response.
+- `TogetherArt`: decorative welcome illustration; excluded from screen-reader navigation.
+
+Keep the production app separate from the reference's demo phone frame and illustrative data.

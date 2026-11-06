@@ -6,7 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import { EventCard } from '@/components/calendar/event-card';
 import { FreeTimeCard } from '@/components/calendar/free-time-card';
 import { Button } from '@/components/ui/button';
-import { ChoiceChips } from '@/components/ui/choice-chips';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -23,7 +23,7 @@ import { mostUsefulFreeTime, sharedFreeTimeForEntries } from '@/lib/calendar/fre
 import { calendarWindow, eventsOnDay, filterCalendar, moveCalendar, type CalendarFilter, type CalendarView } from '@/lib/calendar/view';
 
 export default function CalendarScreen() {
-  const [view, setView] = useState<CalendarView>('Day');
+  const [view, setView] = useState<CalendarView>('Week');
   const [filter, setFilter] = useState<CalendarFilter>('Mine');
   const [anchor, setAnchor] = useState(() => startOfDay(new Date()));
   const focused = useScreenFocus();
@@ -44,13 +44,13 @@ export default function CalendarScreen() {
   const best = allDay.length ? mostUsefulFreeTime(free) : undefined;
   const days = view === 'Day' ? [] : eachDayOfInterval({ start: window.start, end: addDays(window.end, -1) });
   const periodLabel = view === 'Day' ? format(anchor, 'EEEE, MMM d') : view === 'Week' ? `${format(window.start, 'MMM d')}–${format(addDays(window.end, -1), 'MMM d')}` : format(anchor, 'MMMM yyyy');
-  return <Screen title="Calendar" description="See what belongs to you, what’s shared, and when both of you are free." pageTitle="Calendar" refreshing={query.isFetching} onRefresh={() => void query.refetch()} headerAction={<PressableScale accessibilityRole="button" accessibilityLabel="Add event" onPress={() => router.push('/event/new')} style={styles.headerAction}><CalendarPlus color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></PressableScale>}>
-    <Surface variant="panel" style={styles.controlPanel}>
-      <ChoiceChips label="View" value={view} options={(['Day', 'Week', 'Month'] as const).map((value) => ({ value, label: value }))} onChange={setView} />
+  return <Screen title="Calendar" description="Room for both of you, together and apart." pageTitle="Calendar" refreshing={query.isFetching} onRefresh={() => void query.refetch()} headerAction={<PressableScale accessibilityRole="button" accessibilityLabel="Add event" onPress={() => router.push('/event/new')} style={styles.headerAction}><CalendarPlus color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></PressableScale>}>
+    <Surface variant="bare" style={styles.controlPanel}>
+      <SegmentedControl label="View" value={view} options={(['Day', 'Week', 'Month'] as const).map((value) => ({ value, label: value }))} onChange={setView} />
       <View style={styles.navigation}>
         <PressableScale accessibilityRole="button" accessibilityLabel="Previous period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, -1))}><Text variant="title">‹</Text></PressableScale>
         <View style={styles.periodCopy}>
-          <Text variant="title" accessibilityLiveRegion="polite">{periodLabel}</Text>
+          <Text variant="heading" accessibilityLiveRegion="polite">{periodLabel}</Text>
           <Text variant="caption" tone="secondary">{visible.length} {visible.length === 1 ? 'plan' : 'plans'} shown</Text>
         </View>
         <PressableScale accessibilityRole="button" accessibilityLabel="Next period" style={styles.arrow} onPress={() => setAnchor(moveCalendar(anchor, view, 1))}><Text variant="title">›</Text></PressableScale>
@@ -58,7 +58,7 @@ export default function CalendarScreen() {
       {!isSameDay(anchor, new Date()) && <Button label="Go to today" variant="ghost" size="compact" onPress={() => setAnchor(startOfDay(new Date()))} />}
       {view === 'Week' && <View style={styles.week}>{days.map((day) => { const count = visibleOn(day).length; const selected = isSameDay(day, anchor); return <PressableScale key={day.toISOString()} accessibilityRole="button" accessibilityLabel={`${format(day, 'EEEE, MMMM d')}, ${count} ${count === 1 ? 'event' : 'events'}`} accessibilityState={{ selected }} onPress={() => setAnchor(day)} style={[styles.day, selected && styles.selected]}><Text variant="caption" tone={selected ? 'inverse' : 'secondary'}>{format(day, 'EEE')}</Text><Text variant="heading" tone={selected ? 'inverse' : 'default'}>{format(day, 'd')}</Text>{count > 0 && <View style={[styles.dot, selected && styles.dotSelected]} />}</PressableScale>; })}</View>}
       {view === 'Month' && <View style={styles.month}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, index) => <View key={index} style={styles.monthDay}><Text variant="caption" tone="secondary">{label}</Text></View>)}{days.map((day) => { const count = visibleOn(day).length; const selected = isSameDay(day, anchor); return <PressableScale key={day.toISOString()} accessibilityRole="button" accessibilityLabel={`${format(day, 'EEEE, MMMM d')}, ${count} ${count === 1 ? 'event' : 'events'}`} accessibilityState={{ selected }} onPress={() => setAnchor(day)} style={[styles.monthDay, selected && styles.selected]}><Text variant="caption" tone={selected ? 'inverse' : isSameDay(day, new Date()) ? 'accent' : 'default'}>{format(day, 'd')}</Text>{count > 0 && <View style={[styles.monthDot, selected && styles.dotSelected]} />}</PressableScale>; })}</View>}
-      <ChoiceChips label="Whose plans?" value={filter} options={(['Mine', 'Partner', 'Together'] as const).map((value) => ({ value, label: value }))} onChange={setFilter} />
+      <SegmentedControl label="Whose plans?" value={filter} options={(['Mine', 'Partner', 'Together'] as const).map((value) => ({ value, label: value }))} onChange={setFilter} />
     </Surface>
     {filter === 'Partner' && !partner && <EmptyState title="Connect your partner" description="Once they join, you’ll see when they’re busy without seeing private details." action={{ label: 'Invite partner', onPress: () => router.push('/invite-partner') }} />}
     {filter === 'Together' && partner && query.isSuccess && <FreeTimeCard block={best} empty={allDay.length > 0 && free.length === 0} />}
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   periodCopy: { flex: 1, alignItems: 'center', gap: spacing.xs },
   arrow: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, borderWidth: borders.thin, borderColor: colors.border },
   week: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.xs },
-  day: { flex: 1, minHeight: 76, alignItems: 'center', justifyContent: 'center', borderRadius: radii.lg, backgroundColor: colors.surfaceMuted, borderWidth: borders.thin, borderColor: colors.border, gap: spacing.xs },
+  day: { flex: 1, minHeight: layout.eventCardHeight, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, backgroundColor: colors.background, borderWidth: borders.thin, borderColor: colors.background, gap: spacing.xs },
   selected: { backgroundColor: colors.accent, borderColor: colors.accent },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.accent },
   dotSelected: { backgroundColor: colors.onAccent },

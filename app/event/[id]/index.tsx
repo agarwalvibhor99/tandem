@@ -10,6 +10,7 @@ import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { colors } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useCalendarActions, useCalendarEvent } from '@/hooks/use-calendar';
 import { calendarErrorMessage } from '@/lib/calendar/errors';
 import { calendarReminderLabel, cancelCalendarEventNotifications } from '@/lib/calendar/notifications';
@@ -17,6 +18,8 @@ export default function EventDetailScreen() {
   const { id, notification } = useLocalSearchParams<{ id: string; notification?: string }>();
   const event = useCalendarEvent(id ?? '');
   const userId = useAuth().session?.user.id;
+  const members = useCoupleMembers();
+  const ownerName = (ownerId: string) => ownerId === userId ? 'You' : members.data?.find((member) => member.user_id === ownerId)?.name ?? 'Partner';
   const { remove } = useCalendarActions();
   const [confirming, setConfirming] = useState(false);
   const deleting = () => { if (event.data) remove.mutate(event.data, { onSuccess: async () => { if (event.data?.id) await cancelCalendarEventNotifications(event.data.id); router.replace('/calendar'); } }); };
@@ -32,7 +35,7 @@ export default function EventDetailScreen() {
     {event.isPending && <ActivityIndicator color={colors.accent} />}
     {event.isError && <Notice error message="We couldn’t load this event." />}
     {event.isSuccess && !event.data && <Surface><Text variant="heading">Event unavailable</Text><Text tone="secondary">It may have been removed, or you may no longer have access.</Text></Surface>}
-    {event.data && <><Surface><Text variant="heading">{format(new Date(event.data.start_at), 'EEEE, MMMM d')}</Text><Text>{format(new Date(event.data.start_at), 'h:mm a')}–{isSameDay(new Date(event.data.start_at), new Date(event.data.end_at)) ? format(new Date(event.data.end_at), 'h:mm a') : format(new Date(event.data.end_at), 'MMM d, h:mm a')}</Text><Text tone="secondary">{event.data.visibility === 'shared' ? 'Both of you can see this event.' : 'Your partner sees only “Busy”.'}</Text><Text tone="secondary">Alert: {calendarReminderLabel(event.data.reminder_offset_minutes)}</Text>{!!event.data.location && <Text>{event.data.location}</Text>}{!!event.data.notes && <Text>{event.data.notes}</Text>}</Surface>
+    {event.data && <><Surface><Text variant="heading">{format(new Date(event.data.start_at), 'EEEE, MMMM d')}</Text><Text>{format(new Date(event.data.start_at), 'h:mm a')}–{isSameDay(new Date(event.data.start_at), new Date(event.data.end_at)) ? format(new Date(event.data.end_at), 'h:mm a') : format(new Date(event.data.end_at), 'MMM d, h:mm a')}</Text><Text tone="secondary">{event.data.visibility === 'shared' ? 'Both of you can see this event.' : 'Your partner sees only “Busy”.'}</Text><Text variant="caption" tone="secondary">Added by {ownerName(event.data.owner_id)}</Text><Text tone="secondary">Alert: {calendarReminderLabel(event.data.reminder_offset_minutes)}</Text>{!!event.data.location && <Text>{event.data.location}</Text>}{!!event.data.notes && <Text>{event.data.notes}</Text>}</Surface>
       {event.data.owner_id === userId && <ActionPanel description="Edit this plan or remove it from your calendar."><Button label="Edit event" onPress={() => router.push({ pathname: '/event/[id]/edit', params: { id: event.data!.id } })} />{remove.error && <Notice error message={calendarErrorMessage(remove.error)} />}{confirming ? <><Text variant="label">Delete this event?</Text><Text tone="secondary">This removes it from your calendar. This can’t be undone.</Text><Button label="Yes, delete event" variant="danger" loading={remove.isPending} onPress={deleting} /><Button label="Keep event" variant="secondary" onPress={() => setConfirming(false)} /></> : <Button label="Delete event" variant="secondary" onPress={requestDelete} />}</ActionPanel>}
     </>}
   </Screen>;

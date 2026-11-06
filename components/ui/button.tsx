@@ -38,7 +38,7 @@ export function Button({ label, loading = false, variant = 'primary', size = 're
       ]}
     >
       {loading && <ActivityIndicator color={variant === 'primary' || variant === 'danger' ? colors.onAccent : colors.accent} />}
-      <Text variant="label" tone={variant === 'primary' || variant === 'danger' ? 'inverse' : variant === 'ghost' ? 'default' : 'accent'}>{label}</Text>
+      <Text variant="label" style={isDisabled ? styles.disabledText : undefined} tone={variant === 'primary' || variant === 'danger' ? 'inverse' : variant === 'ghost' ? 'default' : 'accent'}>{label}</Text>
     </PressableScale>
   );
 }
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   button: {
     minHeight: layout.minTouchTarget,
-    borderRadius: radii.pill,
+    borderRadius: radii.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     backgroundColor: colors.accent,
@@ -59,11 +59,12 @@ const styles = StyleSheet.create({
   },
   secondaryPressed: { opacity: 0.75 },
   secondary: { backgroundColor: colors.chip, boxShadow: 'none' },
-  compact: { backgroundColor: colors.accent, alignSelf: 'center', paddingHorizontal: spacing.lg },
-  large: { minHeight: 56, paddingVertical: spacing.lg },
+  compact: { alignSelf: 'center', paddingHorizontal: spacing.lg },
+  large: { minHeight: layout.fieldHeight, paddingVertical: spacing.lg },
   danger: { backgroundColor: colors.error },
   quiet: { minHeight: layout.minTouchTarget, backgroundColor: 'transparent', paddingVertical: spacing.xs, paddingHorizontal: 0, alignSelf: 'flex-start', boxShadow: 'none' },
   ghost: { backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border, boxShadow: 'none' },
   primaryPressed: { opacity: 0.88 },
+  disabledText: { color: colors.disabledInk },
   disabled: { backgroundColor: colors.disabled, opacity: 1 },
 });

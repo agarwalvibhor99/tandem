@@ -27,10 +27,12 @@ function TaskDetail({ task }: { task: Task }) {
   const { complete, remove } = useTaskActions();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const name = task.assigned_to === userId ? 'You' : members.data?.find((member) => member.user_id === task.assigned_to)?.name ?? (task.assigned_to ? 'Partner' : 'Anyone');
+  const creatorName = task.created_by === userId ? 'You' : members.data?.find((member) => member.user_id === task.created_by)?.name ?? 'Partner';
   return <>
     <Surface>
       <Text variant="title" accessibilityRole="header">{task.title}</Text>
       <Text tone="secondary">{task.visibility === 'private' ? 'Private · Only you can see this' : 'Shared · Both of you can see this'}</Text>
+      <Text variant="caption" tone="secondary">Added by {creatorName}</Text>
       <AssigneeAvatar name={name} />
       <Text>{dueDateLabel(task.due_at)}</Text>
       {task.due_at && <Text tone="secondary">Alert · {taskReminderLabel(task.reminder_offset_minutes)}</Text>}

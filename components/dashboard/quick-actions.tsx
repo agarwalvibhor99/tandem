@@ -1,34 +1,27 @@
-import { Bell, CalendarPlus, Coffee, ListPlus, Plus, Wallet, type LucideIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { borders, colors, layout, radii, spacing, shadows } from '@/constants/theme';
+import { borders, colors, radii, reference, spacing } from '@/constants/theme';
 
-type Action = { label: string; icon: LucideIcon; href: '/task/new' | '/lists' | '/event/new' | '/expense/new' | '/reminder/new' | '/date/new' };
-const actions: Action[] = [
-  { label: 'New task', icon: Plus, href: '/task/new' },
-  { label: 'Plan time', icon: CalendarPlus, href: '/event/new' },
-  { label: 'Log spend', icon: Wallet, href: '/expense/new' },
-  { label: 'Groceries', icon: ListPlus, href: '/lists' },
-  { label: 'Reminder', icon: Bell, href: '/reminder/new' },
-  { label: 'Date idea', icon: Coffee, href: '/date/new' },
-];
-export function QuickActions() {
+const actions = [
+  { label: 'Add a grocery item', detail: 'Milk, eggs, anything', glyph: '🛒', href: '/lists' },
+  { label: 'Create a to-do', detail: 'Something to remember', glyph: '☑', href: '/task/new' },
+  { label: 'Log an expense', detail: 'Track personal or shared spending', glyph: '↗', href: '/expense/new' },
+  { label: 'Make a plan', detail: 'Something to look forward to', glyph: '♡', href: '/event/new' },
+] as const;
+export function QuickActions({ onAction, hideTitle = false }: { onAction?: () => void; hideTitle?: boolean }) {
   return <View style={styles.section}>
-    <Text variant="label" accessibilityRole="header">Quick actions</Text>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actions} accessibilityLabel="Quick actions">
-      {actions.map(({ label, icon: Icon, href }) => {
-        return <PressableScale key={label} accessibilityRole="button" accessibilityLabel={label} onPress={() => router.push(href)} style={styles.action} pressedStyle={styles.pressed}>
-          <Icon size={layout.iconSize} strokeWidth={1.5} color={colors.accent} />
-          <Text variant="label">{label}</Text>
-        </PressableScale>;
-      })}
-    </ScrollView>
+    {!hideTitle && <Text variant="heading">What’s on your mind?</Text>}
+    {actions.map(action => <PressableScale key={action.label} accessibilityRole="button" accessibilityLabel={action.label} onPress={() => { onAction?.(); router.push(action.href); }} style={styles.choice}>
+      <View style={styles.icon}><Text variant="glyph">{action.glyph}</Text></View>
+      <View style={styles.copy}><Text variant="label">{action.label}</Text><Text variant="caption" tone="secondary">{action.detail}</Text></View>
+    </PressableScale>)}
   </View>;
 }
 const styles = StyleSheet.create({
-  section: { gap: spacing.md }, actions: { gap: spacing.sm },
-  action: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: borders.thin, borderColor: colors.border, ...shadows.soft },
-  pressed: { backgroundColor: colors.accentSoft },
+  section: { gap: spacing.sm },
+  choice: { flexDirection: 'row', alignItems: 'center', gap: reference.headerBottom, padding: reference.choicePadding, borderWidth: borders.strong, borderColor: colors.line, borderRadius: reference.choiceRadius, backgroundColor: colors.surface },
+  icon: { width: reference.choiceIcon, height: reference.choiceIcon, borderRadius: radii.md, backgroundColor: colors.chip, alignItems: 'center', justifyContent: 'center' },
+  copy: { flex: 1, gap: spacing.xs },
 });

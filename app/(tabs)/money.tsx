@@ -1,9 +1,11 @@
+import { Reveal } from '@/components/ui/motion';
 import { format, parseISO } from 'date-fns';
 import { router } from 'expo-router';
 import { ChevronRight, Wallet } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { ChoiceChips } from '@/components/ui/choice-chips';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FormField } from '@/components/ui/form-field';
@@ -12,7 +14,7 @@ import { Screen } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { VisibilitySelector } from '@/components/ui/visibility-selector';
-import { colors, layout, radii, spacing } from '@/constants/theme';
+import { colors, layout, radii, reference, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useExpenseSummary, useExpenses } from '@/hooks/use-expenses';
@@ -40,6 +42,7 @@ export default function MoneyScreen() {
   const [period, setPeriod] = useState<ExpensePeriod>('month');
   const [expenseName, setExpenseName] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'all'>('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -100,18 +103,18 @@ export default function MoneyScreen() {
     }
   };
 
-  return <Screen title="Money" description="A clear view of what you spend, alone or together." refreshing={refreshing} onRefresh={refresh} headerAction={<Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={newExpense} style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}><Wallet color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></Pressable>}>
+  return <Screen title="Money" description="Clarity without keeping score." refreshing={refreshing} onRefresh={refresh} headerAction={<Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={newExpense} style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}><Wallet color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></Pressable>}>
     <VisibilitySelector label="Spending" value={selectedView} sharedAvailable={connected} showUnavailableShared sharedLabel="Couple" onChange={setView} />
-    <ChoiceChips label="Period" value={period} options={periodOptions} onChange={setPeriod} />
+    <SegmentedControl label="Period" value={period} options={periodOptions} onChange={setPeriod} />
 
     {!connected && !members.isPending && !members.isError && <Notice message="Your spending is private. Connect your partner to track couple spending." />}
     {summary.query.isError && <Notice error message="We couldn’t load this month’s balance." />}
 
-    <Surface>
+    <Surface variant="inset" style={styles.spendingSummary}>
       <View style={styles.summaryHeader}>
         <View style={styles.summaryCopy}>
           <Text variant="label" tone="accent">{shared ? 'Couple spending' : 'Personal spending'} · {periodLabel(period)}</Text>
-          {history.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading spending summary" /> : history.query.isError ? <Button label="Try again" variant="quiet" onPress={() => void history.query.refetch()} /> : <Text variant="title">{money(periodTotal)}</Text>}
+          {history.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading spending summary" /> : history.query.isError ? <Button label="Try again" variant="quiet" onPress={() => void history.query.refetch()} /> : <Text variant="display">{money(periodTotal)}</Text>}
         </View>
         <View style={styles.countPill}><Text variant="caption" tone="accent">{periodExpenses.length} {periodExpenses.length === 1 ? 'expense' : 'expenses'}</Text></View>
       </View>
@@ -123,15 +126,15 @@ export default function MoneyScreen() {
       </View>
     </Surface>
 
-    <Surface>
+    <Surface variant="bare">
       <Text variant="heading" accessibilityRole="header">Spending by category</Text>
       {history.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading category spending" />}
       {history.query.isError && <Notice error message="We couldn’t load category spending." />}
       {history.query.isSuccess && categories.length === 0 && <Text tone="secondary">No {shared ? 'couple' : 'personal'} spending in {periodLabel(period).toLowerCase()}.</Text>}
-      <View style={styles.categoryList}>{topCategories.map((entry) => <View key={entry.category} style={styles.categoryRow}>
-        <View style={styles.categoryTop}><Text variant="label">{categoryEmoji[entry.category]} {entry.category}</Text><Text variant="label">{money(entry.amount)}</Text></View>
-        <View style={styles.barTrack}><View style={[styles.barFill, { width: `${Math.max(6, entry.percentage * 100)}%` }]} /></View>
-        <Text variant="caption" tone="secondary">{entry.count} {entry.count === 1 ? 'expense' : 'expenses'} · {Math.round(entry.percentage * 100)}%</Text>
+      <View style={styles.chart}>{topCategories.map((entry, index) => <View key={entry.category} style={styles.chartColumn} accessible accessibilityLabel={`${entry.category}: ${money(entry.amount)}, ${Math.round(entry.percentage * 100)} percent`}>
+        <Text variant="micro">{money(entry.amount)}</Text>
+        <View style={styles.chartTrack}><Reveal variant="chart" style={[styles.chartBar, { height: `${Math.max(8, entry.amount / Math.max(...topCategories.map(category => category.amount)) * 100)}%`, backgroundColor: reference.chartColors[index] }]} /></View>
+        <Text variant="micro" tone="secondary" style={styles.chartLabel}>{entry.category}</Text>
       </View>)}</View>
       {otherCategoryCount > 0 && <Text variant="caption" tone="secondary">+ {otherCategoryCount} more {otherCategoryCount === 1 ? 'category' : 'categories'}</Text>}
     </Surface>
@@ -147,14 +150,15 @@ export default function MoneyScreen() {
       {exportNotice && <Notice message={exportNotice} />}
       {exportError && <Notice error message={exportError} />}
       <FormField label="Search expenses" placeholder="Search by name" value={expenseName} onChangeText={setExpenseName} autoCapitalize="none" autoCorrect={false} returnKeyType="search" />
-      <ChoiceChips label="Category" value={categoryFilter} options={[{ value: 'all', label: 'All' }, ...expenseCategories.map((category) => ({ value: category, label: category }))]} onChange={setCategoryFilter} />
+      <View style={styles.historyHeader}><Button label={filtersOpen ? 'Hide categories' : categoryFilter === 'all' ? 'Filter by category' : categoryFilter} variant="quiet" onPress={() => setFiltersOpen(!filtersOpen)} />{filtersActive && <Button label="Clear filters" variant="quiet" onPress={clearFilters} />}</View>
+      {filtersOpen && <ChoiceChips label="Category" value={categoryFilter} options={[{ value: 'all', label: 'All' }, ...expenseCategories.map((category) => ({ value: category, label: category }))]} onChange={setCategoryFilter} />}
       {history.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading expenses" />}
       {history.query.isError && <><Notice error message="We couldn’t load your expenses." /><Button label="Try again" variant="quiet" onPress={() => void history.query.refetch()} /></>}
       {history.query.isSuccess && history.query.data.length === 0 && <EmptyState title="Nothing recorded yet" description={`Add your first ${shared ? 'couple' : 'personal'} expense to see it here.`} action={{ label: 'Add expense', onPress: newExpense }} />}
       {history.query.isSuccess && history.query.data.length > 0 && filteredExpenses.length === 0 && <EmptyState title="No expenses match" description="Try another name or category." action={{ label: 'Clear filters', onPress: clearFilters }} />}
       {filteredExpenses.slice(0, 8).map((expense) => { const tier = tierStyles(expense); return <Pressable key={expense.id} accessibilityRole="button" accessibilityLabel={`${expense.title}, ${money(expense.amount, expense.currency)}, ${tier.label} spend`} onPress={() => router.push({ pathname: '/expense/[id]', params: { id: expense.id } })} style={styles.expense}>
         <View style={[styles.costDot, tier.dot]} />
-        <View style={styles.expenseCopy}><Text variant="label">{expense.title}</Text><Text variant="caption" tone="secondary">{categoryEmoji[expense.category]} {expense.category} · {format(parseISO(expense.expense_date), 'MMM d')}</Text></View>
+        <View style={styles.expenseCopy}><Text variant="label">{expense.title}</Text><Text variant="caption" tone="secondary">{categoryEmoji[expense.category]} {expense.category} · {format(parseISO(expense.expense_date), 'MMM d')}</Text><Text variant="caption" tone="secondary">Paid by {nameFor(expense.paid_by)}</Text></View>
         <Text variant="label">{money(expense.amount, expense.currency)}</Text>
         <ChevronRight color={colors.textSecondary} size={layout.iconSize} strokeWidth={1.5} />
       </Pressable>; })}
@@ -164,6 +168,7 @@ export default function MoneyScreen() {
 }
 
 const styles = StyleSheet.create({
+  spendingSummary: { backgroundColor: colors.hero, borderWidth: 0, padding: spacing.xl },
   headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft },
   pressed: { opacity: 0.7 },
   summaryHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
@@ -171,18 +176,18 @@ const styles = StyleSheet.create({
   countPill: { minHeight: layout.smallControlHeight, justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft, paddingHorizontal: spacing.md },
   insights: { gap: spacing.xs, paddingTop: spacing.md, marginTop: spacing.md, borderTopWidth: 1, borderColor: colors.border },
   insightRow: { minHeight: layout.smallControlHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  categoryList: { gap: spacing.md },
-  categoryRow: { gap: spacing.xs },
-  categoryTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
-  barTrack: { height: layout.spendingBarHeight, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: radii.pill, backgroundColor: colors.accent },
+  chart: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.md },
+  chartColumn: { flex: 1, alignItems: 'center', gap: spacing.sm },
+  chartTrack: { width: '100%', height: reference.chartHeight, justifyContent: 'flex-end' },
+  chartBar: { width: '100%', borderTopLeftRadius: radii.sm, borderTopRightRadius: radii.sm },
+  chartLabel: { textAlign: 'center' },
   history: { gap: spacing.md },
   historyHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   historyTitle: { flex: 1, gap: spacing.xs },
   expense: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: layout.minTouchTarget, paddingVertical: spacing.sm, borderBottomWidth: 1, borderColor: colors.border },
   costDot: { width: layout.spendingMarkerWidth, height: layout.spendingMarkerHeight, borderRadius: radii.pill },
-  dotSmall: { backgroundColor: colors.success },
+  dotSmall: { backgroundColor: colors.sage },
   dotMedium: { backgroundColor: colors.accent },
-  dotLarge: { backgroundColor: colors.danger },
+  dotLarge: { backgroundColor: colors.warning },
   expenseCopy: { flex: 1, gap: spacing.xs },
 });

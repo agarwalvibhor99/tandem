@@ -21,7 +21,7 @@ import { useCurrentCouple } from '@/hooks/use-current-couple';
 import { useExpenseActions } from '@/hooks/use-expenses';
 import { expenseErrorMessage } from '@/lib/expenses/errors';
 import { expenseFormSchema } from '@/lib/validation/expense';
-import { expenseCategories, type ExpenseCategory, type ExpenseInput, type ExpenseSplitMode, type ExpenseVisibility } from '@/types/expense';
+import { expenseCategories, type ExpenseCategory, type ExpenseDetail, type ExpenseInput, type ExpenseSplitMode, type ExpenseVisibility } from '@/types/expense';
 
 type Values = { title: string; amountText: string; category: ExpenseCategory; paid_by: string; splitMode: ExpenseSplitMode; expense_date: string; notes: string };
 const today = () => format(new Date(), 'yyyy-MM-dd');
@@ -33,6 +33,14 @@ const categoryEmoji: Record<ExpenseCategory, string> = {
 
 function safeCents(value: string) { try { return toCents(value); } catch { return 0; } }
 function nameFor(id: string, userId: string, members: { user_id: string; name: string }[]) { return id === userId ? 'You' : members.find((member) => member.user_id === id)?.name ?? 'Partner'; }
+function splitModeFor(expense: ExpenseDetail | undefined): ExpenseSplitMode {
+  if (!expense || expense.visibility === 'private') return 'equal';
+  const splitCents = expense.splits.map((split) => toCents(split.amount));
+  if (splitCents.length > 1 && splitCents.every((amount) => amount === splitCents[0])) return 'equal';
+  if (expense.splits.some((split) => split.user_id === expense.paid_by && toCents(split.amount) === toCents(expense.amount)) && expense.splits.every((split) => split.user_id === expense.paid_by || toCents(split.amount) === 0)) return 'one_payer';
+  return 'custom';
+}
+
 function splitSummary({ amountCents, visibility, splitMode, paidBy, memberIds, userId, members }: { amountCents: number; visibility: ExpenseVisibility; splitMode: ExpenseSplitMode; paidBy: string; memberIds: string[]; userId: string; members: { user_id: string; name: string }[] }) {
   if (amountCents <= 0) return 'Enter an amount to see the split.';
   if (visibility === 'private') return 'Only you can see this expense.';
@@ -47,17 +55,17 @@ function splitSummary({ amountCents, visibility, splitMode, paidBy, memberIds, u
   return `${nameFor(other, userId, members)} owes ${nameFor(paidBy, userId, members).toLowerCase()} ${money(owedToPayer)}.`;
 }
 
-export function ExpenseForm({ initialVisibility }: { initialVisibility?: ExpenseVisibility }) {
+export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?: ExpenseVisibility; expense?: ExpenseDetail }) {
   const userId = useAuth().session?.user.id ?? '';
   const couple = useCurrentCouple();
   const members = useCoupleMembers();
-  const { create } = useExpenseActions();
-  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
+  const { create, update } = useExpenseActions();
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>(() => Object.fromEntries((expense?.splits ?? []).map((split) => [split.user_id, String(split.amount)])));
   const [dateOpen, setDateOpen] = useState(false);
-  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(() => !!expense?.notes);
   const memberRows = useMemo(() => members.data ?? [], [members.data]);
   const memberIds = useMemo(() => memberRows.map((member) => member.user_id), [memberRows]);
-  const form = useForm<Values & { visibility: ExpenseVisibility }>({ resolver: zodResolver(expenseFormSchema), defaultValues: { title: '', amountText: '', category: 'Groceries', paid_by: userId, splitMode: 'equal', expense_date: today(), notes: '', visibility: initialVisibility ?? 'private' } });
+  const form = useForm<Values & { visibility: ExpenseVisibility }>({ resolver: zodResolver(expenseFormSchema), defaultValues: { title: expense?.title ?? '', amountText: expense ? String(expense.amount) : '', category: expense?.category ?? 'Groceries', paid_by: expense?.paid_by ?? userId, splitMode: splitModeFor(expense), expense_date: expense?.expense_date ?? today(), notes: expense?.notes ?? '', visibility: expense?.visibility ?? initialVisibility ?? 'private' } });
   const amountText = useWatch({ control: form.control, name: 'amountText' });
   const splitMode = useWatch({ control: form.control, name: 'splitMode' });
   const visibility = useWatch({ control: form.control, name: 'visibility' });
@@ -66,7 +74,7 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
   const connected = memberRows.length > 1;
   useEffect(() => { if (!form.getValues('paid_by') && userId) form.setValue('paid_by', userId); }, [form, userId]);
   useEffect(() => { if (!members.isPending && !members.isError && visibility === 'shared' && !connected) form.setValue('visibility', 'private'); }, [connected, form, members.isPending, members.isError, visibility]);
-  const busy = create.isPending;
+  const busy = create.isPending || update.isPending;
   const amountCents = safeCents(amountText);
   const summary = splitSummary({ amountCents, visibility, splitMode, paidBy, memberIds, userId, members: memberRows });
 
@@ -85,7 +93,8 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
         expense_date: values.expense_date, notes: values.notes, paid_by: values.visibility === 'private' ? userId : values.paid_by, visibility: values.visibility,
         splits: splits.map((split) => ({ user_id: split.userId, amount: fromCents(split.amountCents) })),
       };
-      create.mutate(input, { onSuccess: (id) => router.replace({ pathname: '/expense/[id]', params: { id } }) });
+      if (expense) update.mutate({ id: expense.id, input }, { onSuccess: (savedId) => router.replace({ pathname: '/expense/[id]', params: { id: savedId } }) });
+      else create.mutate(input, { onSuccess: (id) => router.replace({ pathname: '/expense/[id]', params: { id } }) });
     } catch (error) {
       form.setError('amountText', { message: error instanceof Error ? error.message : 'Check the split amounts' });
     }
@@ -123,7 +132,8 @@ export function ExpenseForm({ initialVisibility }: { initialVisibility?: Expense
     {notesOpen ? <Controller control={form.control} name="notes" render={({ field, fieldState }) => <FormField label="Note" placeholder="Anything useful to remember" multiline numberOfLines={3} value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} maxLength={2000} editable={!busy} />} /> : <Button label="+ Add a note" variant="quiet" onPress={() => setNotesOpen(true)} />}
     <View style={styles.summary}><Text variant="heading">{summary}</Text></View>
     {create.error && <Notice error message={expenseErrorMessage(create.error)} />}
-    <Button label="Save expense" size="large" loading={busy} disabled={amountCents <= 0} onPress={() => void submit()} />
+    {update.error && <Notice error message={expenseErrorMessage(update.error)} />}
+    <Button label={expense ? 'Save changes' : 'Save expense'} size="large" loading={busy} disabled={amountCents <= 0} onPress={() => void submit()} />
   </View>;
 }
 

@@ -2,7 +2,7 @@ import { ConnectionCard } from '@/components/couples/connection-card';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, ChevronRight, Coffee, Moon, Settings, Sun, UserRound, X } from 'lucide-react-native';
+import { Bell, CircleCheck, ChevronRight, Coffee, Moon, Settings, Sun, UserRound, X } from 'lucide-react-native';
 
 import { Button } from '@/components/ui/button';
 import { ChoiceChips } from '@/components/ui/choice-chips';
@@ -70,6 +70,7 @@ export default function MoreScreen() {
         <Text variant="title" accessibilityRole="header">Settings and spaces</Text>
         <View style={styles.rows}>
           <ConnectionCard compact />
+          <MoreRow title="Tasks" description="Your to-dos, personal and shared" icon={CircleCheck} onPress={() => router.push('/tasks')} />
           <MoreRow title="Reminders" description="Private or shared nudges" icon={Bell} onPress={() => router.push('/reminders')} />
           <MoreRow title="Date ideas" description="Saved plans and date planner" icon={Coffee} onPress={() => router.push('/dates')} />
         </View>

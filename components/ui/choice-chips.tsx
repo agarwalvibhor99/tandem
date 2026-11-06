@@ -8,7 +8,7 @@ export function ChoiceChips<T extends string>({ label, value, options, onChange,
   const chips = options.map((option) => {
     const selected = value === option.value;
     return <PressableScale key={option.value} accessibilityRole="radio" aria-checked={selected} accessibilityLabel={option.label} accessibilityState={{ checked: selected, disabled: disabled || option.disabled }} disabled={disabled || option.disabled} onPress={() => onChange(option.value)} style={[styles.chip, selected && styles.selected, (disabled || option.disabled) && styles.disabled]}>
-      <Text variant="label" tone={selected ? 'inverse' : 'secondary'}>{option.label}</Text>
+      <Text variant="label" tone={selected ? 'accent' : 'secondary'}>{option.label}</Text>
     </PressableScale>;
   });
   return <View style={styles.group}>
@@ -19,5 +19,5 @@ export function ChoiceChips<T extends string>({ label, value, options, onChange,
 const styles = StyleSheet.create({
   group: { gap: spacing.sm }, row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: { minHeight: layout.minTouchTarget, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.pill, backgroundColor: colors.chip, justifyContent: 'center', borderWidth: borders.thin, borderColor: colors.chip },
-  selected: { backgroundColor: colors.accent }, disabled: { opacity: 0.5 },
+  selected: { backgroundColor: colors.accentSoft, borderColor: colors.sage }, disabled: { opacity: 0.5 },
 });
