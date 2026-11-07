@@ -4,6 +4,7 @@ import type { CalendarEntry, CalendarEvent, CalendarEventInput } from './calenda
 import type { Expense, ExpenseSplit, ExpenseSummaryRow } from './expense';
 import type { Reminder, ReminderInput } from './reminder';
 import type { DateIdea, DateIdeaInput } from './date-idea';
+import type { PartnerNudge } from './nudge';
 
 /** Matches the checked-in migrations. Regenerate from the live schema after deployment. */
 export type Profile = {
@@ -43,6 +44,7 @@ export type Database = {
         Update: Partial<Pick<Profile, 'name' | 'avatar_url' | 'timezone' | 'couple_onboarding_skipped_at'>>;
         Relationships: [];
       };
+      partner_nudges: { Row: PartnerNudge; Insert: { couple_id: string; type: PartnerNudge['type'] }; Update: never; Relationships: [] };
     };
     Views: { [_ in never]: never };
     Functions: {

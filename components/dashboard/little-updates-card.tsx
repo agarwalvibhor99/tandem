@@ -8,6 +8,7 @@ import { PressableScale } from '@/components/ui/pressable-scale';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { borders, colors, layout, radii, spacing } from '@/constants/theme';
+import type { PartnerNudgeType } from '@/types/nudge';
 
 export type LittleUpdate = {
   id: string;
@@ -34,9 +35,15 @@ export function LittleUpdatesCard({ updates, onAdd }: { updates: LittleUpdate[];
   </Surface>;
 }
 
-export function LittleUpdatesActions({ onClose }: { onClose: () => void }) {
+export function LittleUpdatesActions({ onClose, onSendNudge, canSendNudge = true }: { onClose: () => void; onSendNudge: (type: PartnerNudgeType) => void; canSendNudge?: boolean }) {
+  const nudges: { type: PartnerNudgeType; glyph: string; label: string; detail: string }[] = [
+    { type: 'rose', glyph: '🌹', label: 'Send a rose', detail: 'A little love' },
+    { type: 'heart', glyph: '❤️', label: 'Send a heart', detail: 'Thinking of you' },
+    { type: 'coffee', glyph: '☕', label: 'Coffee cheers', detail: 'Warm hello' },
+  ];
   return <Surface variant="panel" style={styles.actionsCard}>
     <View style={styles.actionsHeader}><View style={styles.actionsTitle}><View style={styles.addIcon}><Plus color={colors.accent} size={layout.iconSize} /></View><View><Text variant="title">Add to your day</Text><Text variant="caption" tone="secondary">Choose what you want to capture.</Text></View></View><Button label="Done" variant="quiet" size="compact" onPress={onClose} /></View>
+    {canSendNudge && <View style={styles.nudgeSection}><Text variant="caption" tone="secondary">Send something small</Text><View style={styles.nudgeRow}>{nudges.map((nudge) => <PressableScale key={nudge.type} accessibilityRole="button" accessibilityLabel={nudge.label} onPress={() => onSendNudge(nudge.type)} style={styles.nudge}><Text style={styles.nudgeGlyph}>{nudge.glyph}</Text><View style={styles.nudgeCopy}><Text variant="caption">{nudge.label}</Text><Text variant="micro" tone="secondary">{nudge.detail}</Text></View></PressableScale>)}</View></View>}
     <QuickActions hideTitle onAction={onClose} />
   </Surface>;
 }
@@ -53,4 +60,9 @@ const styles = StyleSheet.create({
   actionsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   actionsTitle: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   addIcon: { width: layout.iconContainerSize, height: layout.iconContainerSize, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
+  nudgeSection: { gap: spacing.sm },
+  nudgeRow: { flexDirection: 'row', gap: spacing.sm },
+  nudge: { flex: 1, minHeight: layout.listRowHeight, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  nudgeGlyph: { fontSize: layout.emojiSize, lineHeight: layout.emojiLineHeight },
+  nudgeCopy: { alignItems: 'center', gap: spacing.xs },
 });
