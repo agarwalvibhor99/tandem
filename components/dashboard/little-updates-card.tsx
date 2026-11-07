@@ -40,6 +40,7 @@ export function LittleUpdatesActions({ onClose, onSendNudge, onPreviewNudge, can
     { type: 'rose', glyph: '🌹', label: 'Send a rose', detail: 'A little love' },
     { type: 'heart', glyph: '❤️', label: 'Send a heart', detail: 'Thinking of you' },
     { type: 'coffee', glyph: '☕', label: 'Coffee cheers', detail: 'Warm hello' },
+    { type: 'beer', glyph: '🍺', label: 'Beer cheers', detail: 'Cheers!!' },
   ];
   return <Surface variant="panel" style={styles.actionsCard}>
     <View style={styles.actionsHeader}><View style={styles.actionsTitle}><View style={styles.addIcon}><Plus color={colors.accent} size={layout.iconSize} /></View><View><Text variant="title">Add to your day</Text><Text variant="caption" tone="secondary">Choose what you want to capture.</Text></View></View><Button label="Done" variant="quiet" size="compact" onPress={onClose} /></View>
@@ -62,9 +63,9 @@ const styles = StyleSheet.create({
   actionsTitle: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   addIcon: { width: layout.iconContainerSize, height: layout.iconContainerSize, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
   nudgeSection: { gap: spacing.sm },
-  nudgeRow: { flexDirection: 'row', gap: spacing.sm },
-  nudge: { flex: 1, minHeight: layout.listRowHeight, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  nudgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  nudge: { flexGrow: 1, flexBasis: '46%', minHeight: layout.listRowHeight, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
   nudgeGlyph: { fontSize: layout.emojiSize, lineHeight: layout.emojiLineHeight },
   nudgeCopy: { alignItems: 'center', gap: spacing.xs },
-  preview: { flex: 1, minHeight: layout.minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, borderRadius: radii.md, backgroundColor: colors.surfaceMuted },
+  preview: { flexGrow: 1, flexBasis: '46%', minHeight: layout.minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, borderRadius: radii.md, backgroundColor: colors.surfaceMuted },
 });
