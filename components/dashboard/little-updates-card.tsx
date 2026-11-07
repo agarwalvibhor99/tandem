@@ -35,7 +35,7 @@ export function LittleUpdatesCard({ updates, onAdd }: { updates: LittleUpdate[];
   </Surface>;
 }
 
-export function LittleUpdatesActions({ onClose, onSendNudge, canSendNudge = true }: { onClose: () => void; onSendNudge: (type: PartnerNudgeType) => void; canSendNudge?: boolean }) {
+export function LittleUpdatesActions({ onClose, onSendNudge, onPreviewNudge, canSendNudge = true }: { onClose: () => void; onSendNudge: (type: PartnerNudgeType) => void; onPreviewNudge?: (type: PartnerNudgeType) => void; canSendNudge?: boolean }) {
   const nudges: { type: PartnerNudgeType; glyph: string; label: string; detail: string }[] = [
     { type: 'rose', glyph: '🌹', label: 'Send a rose', detail: 'A little love' },
     { type: 'heart', glyph: '❤️', label: 'Send a heart', detail: 'Thinking of you' },
@@ -44,6 +44,7 @@ export function LittleUpdatesActions({ onClose, onSendNudge, canSendNudge = true
   return <Surface variant="panel" style={styles.actionsCard}>
     <View style={styles.actionsHeader}><View style={styles.actionsTitle}><View style={styles.addIcon}><Plus color={colors.accent} size={layout.iconSize} /></View><View><Text variant="title">Add to your day</Text><Text variant="caption" tone="secondary">Choose what you want to capture.</Text></View></View><Button label="Done" variant="quiet" size="compact" onPress={onClose} /></View>
     {canSendNudge && <View style={styles.nudgeSection}><Text variant="caption" tone="secondary">Send something small</Text><View style={styles.nudgeRow}>{nudges.map((nudge) => <PressableScale key={nudge.type} accessibilityRole="button" accessibilityLabel={nudge.label} onPress={() => onSendNudge(nudge.type)} style={styles.nudge}><Text style={styles.nudgeGlyph}>{nudge.glyph}</Text><View style={styles.nudgeCopy}><Text variant="caption">{nudge.label}</Text><Text variant="micro" tone="secondary">{nudge.detail}</Text></View></PressableScale>)}</View></View>}
+    {__DEV__ && onPreviewNudge && <View style={styles.nudgeSection}><Text variant="caption" tone="secondary">Preview on this device · only you can see this</Text><View style={styles.nudgeRow}>{nudges.map((nudge) => <PressableScale key={nudge.type} accessibilityRole="button" accessibilityLabel={`Preview ${nudge.type} animation`} onPress={() => onPreviewNudge(nudge.type)} style={styles.preview}><Text style={styles.nudgeGlyph}>{nudge.glyph}</Text><Text variant="micro">Preview</Text></PressableScale>)}</View></View>}
     <QuickActions hideTitle onAction={onClose} />
   </Surface>;
 }
@@ -65,4 +66,5 @@ const styles = StyleSheet.create({
   nudge: { flex: 1, minHeight: layout.listRowHeight, padding: spacing.sm, borderRadius: radii.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
   nudgeGlyph: { fontSize: layout.emojiSize, lineHeight: layout.emojiLineHeight },
   nudgeCopy: { alignItems: 'center', gap: spacing.xs },
+  preview: { flex: 1, minHeight: layout.minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, borderRadius: radii.md, backgroundColor: colors.surfaceMuted },
 });
