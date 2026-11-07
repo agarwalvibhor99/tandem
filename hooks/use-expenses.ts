@@ -10,6 +10,7 @@ export const expenseKeys = {
   history: (userId: string, visibility: ExpenseVisibility, coupleId: string) => [...expenseKeys.all(userId), 'history', visibility, coupleId] as const,
   detail: (userId: string, id: string) => [...expenseKeys.all(userId), 'detail', id] as const,
   summary: (userId: string, visibility: ExpenseVisibility, coupleId: string, monthStart: string) => [...expenseKeys.all(userId), 'summary', visibility, coupleId, monthStart] as const,
+  balance: (userId: string, visibility: ExpenseVisibility, coupleId: string) => [...expenseKeys.all(userId), 'balance', visibility, coupleId] as const,
 };
 
 export function useExpenses(visibility: ExpenseVisibility = 'shared', active = true) {
@@ -32,6 +33,14 @@ export function useExpenseSummary(visibility: ExpenseVisibility = 'shared', acti
   const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
   const query = useQuery({ queryKey: expenseKeys.summary(userId, visibility, coupleId, monthStart), enabled: !!userId && active && (visibility === 'private' || !!coupleId), queryFn: ({ signal }) => getExpenseApi().summary(monthStart, visibility, signal) });
   return { couple, monthStart, query };
+}
+
+export function useExpenseBalance(visibility: ExpenseVisibility = 'shared', active = true) {
+  const userId = useAuth().session?.user.id ?? '';
+  const couple = useCurrentCouple();
+  const coupleId = couple.data?.id ?? '';
+  const query = useQuery({ queryKey: expenseKeys.balance(userId, visibility, coupleId), enabled: !!userId && active && (visibility === 'private' || !!coupleId), queryFn: ({ signal }) => getExpenseApi().balance(visibility, visibility === 'shared' ? coupleId : null, signal) });
+  return { couple, query };
 }
 
 export function useExpenseActions() {

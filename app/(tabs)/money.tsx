@@ -7,6 +7,7 @@ import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from 
 import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { ChoiceChips } from '@/components/ui/choice-chips';
+import { Dialog } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FormField } from '@/components/ui/form-field';
 import { Notice } from '@/components/ui/notice';
@@ -17,8 +18,9 @@ import { VisibilitySelector } from '@/components/ui/visibility-selector';
 import { colors, layout, radii, reference, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
-import { useExpenseSummary, useExpenses } from '@/hooks/use-expenses';
+import { useExpenseActions, useExpenseBalance, useExpenseSummary, useExpenses } from '@/hooks/use-expenses';
 import { categoryBreakdown, costTier, expenseTotal, expensesInPeriod, payerBreakdown, periodLabel, type ExpensePeriod } from '@/lib/expenses/analytics';
+import { fromCents } from '@/lib/expenses/calculations';
 import { expenseExportFilename, expensesToCsv } from '@/lib/expenses/export';
 import { filterExpenses } from '@/lib/expenses/filters';
 import { expenseCategories, type Expense, type ExpenseCategory, type ExpenseVisibility } from '@/types/expense';
@@ -46,10 +48,18 @@ export default function MoneyScreen() {
   const [exporting, setExporting] = useState(false);
   const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [settleOpen, setSettleOpen] = useState(false);
+  const [settleNotice, setSettleNotice] = useState<string | null>(null);
+  const [settleError, setSettleError] = useState<string | null>(null);
   const selectedView: ExpenseVisibility = connected ? view : 'private';
   const summary = useExpenseSummary(selectedView);
   const history = useExpenses(selectedView);
+  const balance = useExpenseBalance(selectedView, !members.isPending && (selectedView === 'private' || connected));
+  const { create: createExpense } = useExpenseActions();
   const periodExpenses = useMemo(() => expensesInPeriod(history.query.data ?? [], period), [history.query.data, period]);
+  const historyTotal = useMemo(() => expenseTotal(history.query.data ?? []), [history.query.data]);
+  const allTimeTotal = balance.query.data?.totalAmount ?? historyTotal;
+  const allTimeCount = history.query.data?.length ?? 0;
   const categories = useMemo(() => categoryBreakdown(periodExpenses), [periodExpenses]);
   const payers = useMemo(() => payerBreakdown(periodExpenses), [periodExpenses]);
   const periodTotal = useMemo(() => expenseTotal(periodExpenses), [periodExpenses]);
@@ -60,9 +70,13 @@ export default function MoneyScreen() {
   const topCategories = categories.slice(0, 4);
   const otherCategoryCount = Math.max(0, categories.length - topCategories.length);
   const nameFor = (id: string) => id === userId ? 'You' : members.data?.find((member) => member.user_id === id)?.name ?? 'Partner';
+  const partnerId = members.data?.find((member) => member.user_id !== userId)?.user_id;
+  const youPaid = payers.find((payer) => payer.userId === userId)?.amount ?? 0;
+  const partnerPaid = partnerId ? payers.find((payer) => payer.userId === partnerId)?.amount ?? 0 : 0;
   const shared = selectedView === 'shared';
-  const refreshing = members.isFetching || summary.query.isFetching || history.query.isFetching;
-  const refresh = () => { void members.refetch(); void summary.query.refetch(); void history.query.refetch(); };
+  const allTimeBalance = balance.query.data?.balance;
+  const refreshing = members.isFetching || summary.query.isFetching || history.query.isFetching || balance.query.isFetching;
+  const refresh = () => { void members.refetch(); void summary.query.refetch(); void history.query.refetch(); void balance.query.refetch(); };
   const newExpense = () => router.push({ pathname: '/expense/new', params: { visibility: selectedView } });
   const settlement = shared && period === 'month' && summary.query.data?.members.length
     ? summary.query.data.members.find((member) => member.net_amount < 0)
@@ -70,6 +84,31 @@ export default function MoneyScreen() {
   const topPayer = payers[0];
   const filtersActive = !!expenseName.trim() || categoryFilter !== 'all';
   const clearFilters = () => { setExpenseName(''); setCategoryFilter('all'); };
+  const settlePayment = () => {
+    if (!allTimeBalance || !balance.couple.data?.id) return;
+    setSettleError(null);
+    createExpense.mutate({
+      couple_id: balance.couple.data.id,
+      title: 'Settlement payment',
+      amount: fromCents(allTimeBalance.amountCents),
+      currency: 'USD',
+      category: 'Other',
+      expense_date: format(new Date(), 'yyyy-MM-dd'),
+      notes: `${nameFor(allTimeBalance.debtorId)} paid ${nameFor(allTimeBalance.creditorId)} to settle the shared balance.`,
+      paid_by: allTimeBalance.debtorId,
+      visibility: 'shared',
+      splits: [
+        { user_id: allTimeBalance.debtorId, amount: 0 },
+        { user_id: allTimeBalance.creditorId, amount: fromCents(allTimeBalance.amountCents) },
+      ],
+    }, {
+      onSuccess: () => {
+        setSettleOpen(false);
+        setSettleNotice('Payment recorded. Nothing to settle.');
+      },
+      onError: () => setSettleError('We couldn’t record the payment. Try again.'),
+    });
+  };
   const exportExpenses = async () => {
     setExportNotice(null);
     setExportError(null);
@@ -105,6 +144,28 @@ export default function MoneyScreen() {
 
   return <Screen title="Money" description="Clarity without keeping score." refreshing={refreshing} onRefresh={refresh} headerAction={<Pressable accessibilityRole="button" accessibilityLabel="Add expense" onPress={newExpense} style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}><Wallet color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></Pressable>}>
     <VisibilitySelector label="Spending" value={selectedView} sharedAvailable={connected} showUnavailableShared sharedLabel="Couple" onChange={setView} />
+    <Surface variant="bare" style={styles.allTimeSummary}>
+      <View style={styles.allTimeHeader}>
+        <Text variant="caption" tone="secondary">All-time {shared ? 'couple' : 'personal'} spending</Text>
+        {balance.query.isPending || history.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading all-time spending" /> : <View style={styles.allTimeValues}><Text variant="label">{money(allTimeTotal)}</Text><Text variant="caption" tone="secondary">· {allTimeCount} {allTimeCount === 1 ? 'expense' : 'expenses'}</Text></View>}
+      </View>
+      {!balance.query.isPending && <View style={styles.balanceRow}>
+        <Text variant="caption" tone={allTimeBalance ? 'accent' : 'secondary'} numberOfLines={1} style={styles.balanceCopy}>
+          {balance.query.isError ? 'Balance unavailable — try refreshing' : allTimeBalance ? `${nameFor(allTimeBalance.debtorId)} owes ${nameFor(allTimeBalance.creditorId)} ${money(fromCents(allTimeBalance.amountCents))}` : shared ? 'Nothing to settle' : 'Personal spending only'}
+        </Text>
+        {allTimeBalance && !balance.query.isError && <Button label="Settle payment" variant="secondary" size="compact" disabled={createExpense.isPending} onPress={() => { setSettleError(null); setSettleOpen(true); }} />}
+      </View>}
+    </Surface>
+    {settleNotice && <Notice message={settleNotice} />}
+    {settleError && <Notice error message={settleError} />}
+    <Dialog visible={settleOpen} title="Settle payment" eyebrow="Shared balance" onClose={() => { if (!createExpense.isPending) setSettleOpen(false); }}>
+      {allTimeBalance && <>
+        <Text>{nameFor(allTimeBalance.debtorId)} paid {nameFor(allTimeBalance.creditorId)} {money(fromCents(allTimeBalance.amountCents))}.</Text>
+        <Text tone="secondary">This records the payment in Tandem and clears the shared balance. Confirm only after the payment has been made.</Text>
+        <Button label="Record payment" loading={createExpense.isPending} onPress={settlePayment} />
+      </>}
+    </Dialog>
+
     <SegmentedControl label="Period" value={period} options={periodOptions} onChange={setPeriod} />
 
     {!connected && !members.isPending && !members.isError && <Notice message="Your spending is private. Connect your partner to track couple spending." />}
@@ -118,11 +179,10 @@ export default function MoneyScreen() {
         </View>
         <View style={styles.countPill}><Text variant="caption" tone="accent">{periodExpenses.length} {periodExpenses.length === 1 ? 'expense' : 'expenses'}</Text></View>
       </View>
-      <View style={styles.insights}>
-        {shared && period === 'month' && summary.query.isPending && <Text variant="caption" tone="secondary">Checking split…</Text>}
-        {shared && period === 'month' && settlement && <View style={styles.insightRow}><Text variant="caption" tone="secondary">To settle</Text><Text variant="label">{nameFor(settlement.user_id)} owes {money(-settlement.net_amount)}</Text></View>}
-        {shared && period === 'month' && summary.query.data?.members.length && !settlement && <View style={styles.insightRow}><Text variant="caption" tone="secondary">To settle</Text><Text variant="label">Nothing right now</Text></View>}
-        {topPayer && <View style={styles.insightRow}><Text variant="caption" tone="secondary">Paid most</Text><Text variant="label">{nameFor(topPayer.userId)} · {money(topPayer.amount)}</Text></View>}
+      <View style={styles.summaryStats}>
+        <View style={styles.stat}><Text variant="caption" tone="secondary">You paid</Text><Text variant="label">{money(youPaid)}</Text></View>
+        {shared ? <View style={styles.stat}><Text variant="caption" tone="secondary">{partnerId ? nameFor(partnerId) : 'Partner'} paid</Text><Text variant="label">{money(partnerPaid)}</Text></View> : <View style={styles.stat}><Text variant="caption" tone="secondary">Entries</Text><Text variant="label">{periodExpenses.length}</Text></View>}
+        <View style={styles.stat}><Text variant="caption" tone="secondary">{shared && period === 'month' ? 'To settle' : 'Paid most'}</Text><Text variant="label" numberOfLines={2}>{shared && period === 'month' && settlement ? `${nameFor(settlement.user_id)} owes ${money(-settlement.net_amount)}` : shared && period === 'month' ? 'Nothing to settle' : topPayer ? nameFor(topPayer.userId) : '—'}</Text></View>
       </View>
     </Surface>
 
@@ -169,11 +229,18 @@ export default function MoneyScreen() {
 
 const styles = StyleSheet.create({
   spendingSummary: { backgroundColor: colors.hero, borderWidth: 0, padding: spacing.xl },
+  allTimeSummary: { gap: spacing.xs, paddingVertical: spacing.xs },
+  allTimeHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  balanceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  balanceCopy: { flex: 1 },
+  allTimeValues: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft },
   pressed: { opacity: 0.7 },
   summaryHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
   summaryCopy: { flex: 1, gap: spacing.sm },
   countPill: { minHeight: layout.smallControlHeight, justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft, paddingHorizontal: spacing.md },
+  summaryStats: { flexDirection: 'row', gap: spacing.sm, paddingTop: spacing.md, marginTop: spacing.md, borderTopWidth: 1, borderColor: colors.border },
+  stat: { flex: 1, gap: spacing.xs, minWidth: 0 },
   insights: { gap: spacing.xs, paddingTop: spacing.md, marginTop: spacing.md, borderTopWidth: 1, borderColor: colors.border },
   insightRow: { minHeight: layout.smallControlHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   chart: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.md },

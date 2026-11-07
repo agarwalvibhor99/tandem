@@ -57,3 +57,8 @@ export type ExpenseSummary = {
   totalAmount: number;
   members: ExpenseSummaryRow[];
 };
+
+export type ExpenseBalanceSummary = {
+  totalAmount: number;
+  balance: { debtorId: string; creditorId: string; amountCents: number } | null;
+};

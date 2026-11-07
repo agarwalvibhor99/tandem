@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
-import type { Expense, ExpenseDetail, ExpenseInput, ExpenseSummary, ExpenseSummaryRow, ExpenseVisibility } from '@/types/expense';
+import type { Expense, ExpenseBalanceSummary, ExpenseDetail, ExpenseInput, ExpenseSummary, ExpenseSummaryRow, ExpenseVisibility } from '@/types/expense';
 import { expenseSchema } from '@/lib/validation/expense';
+import { calculateCoupleBalance, fromCents, toCents, userNetPositions } from '@/lib/expenses/calculations';
 
 function numeric(value: number | string | null | undefined): number { return Number(value ?? 0); }
 function row(value: ExpenseSummaryRow & { paid_amount: number | string; share_amount: number | string; net_amount: number | string; total_amount: number | string }): ExpenseSummaryRow {
@@ -37,6 +38,27 @@ export function createExpenseApi(client: SupabaseClient<Database>) {
       if (error) throw error;
       const members = (data ?? []).map((value) => row(value));
       return { totalAmount: members[0]?.total_amount ?? 0, members };
+    },
+    async balance(visibility: ExpenseVisibility, coupleId: string | null, signal?: AbortSignal): Promise<ExpenseBalanceSummary> {
+      let expensesQuery = client.from('expenses').select('id, amount, paid_by').eq('visibility', visibility).limit(1000);
+      if (visibility === 'shared' && coupleId) expensesQuery = expensesQuery.eq('couple_id', coupleId);
+      if (signal) expensesQuery = expensesQuery.abortSignal(signal);
+      const { data: expenses, error: expensesError } = await expensesQuery;
+      if (expensesError) throw expensesError;
+      const rows = expenses ?? [];
+      if (rows.length === 0) return { totalAmount: 0, balance: null };
+      let splitsQuery = client.from('expense_splits').select('expense_id, user_id, amount').in('expense_id', rows.map((expense) => expense.id));
+      if (signal) splitsQuery = splitsQuery.abortSignal(signal);
+      const { data: splits, error: splitsError } = await splitsQuery;
+      if (splitsError) throw splitsError;
+      const splitsByExpense = new Map<string, Array<{ userId: string; amountCents: number }>>();
+      for (const split of splits ?? []) {
+        const current = splitsByExpense.get(split.expense_id) ?? [];
+        current.push({ userId: split.user_id, amountCents: toCents(split.amount) });
+        splitsByExpense.set(split.expense_id, current);
+      }
+      const positions = userNetPositions(rows.map((expense) => ({ paidBy: expense.paid_by, amountCents: toCents(expense.amount), splits: splitsByExpense.get(expense.id) ?? [] })));
+      return { totalAmount: fromCents(rows.reduce((total, expense) => total + toCents(expense.amount), 0)), balance: calculateCoupleBalance(positions) };
     },
     async create(input: ExpenseInput): Promise<string> {
       const parsed = expenseSchema.parse(input);
