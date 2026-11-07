@@ -90,12 +90,12 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
   const save = () => { onChange(draftDate.toISOString()); close(); };
   const draftHour = draftDate.getHours();
   const draftHourIndex = (draftHour % 12 || 12) - 1;
-  const draftMinuteIndex = Math.min(wheelMinutes.length - 1, Math.round(draftDate.getMinutes() / 5));
+  const draftMinuteIndex = draftDate.getMinutes();
   const draftPeriodIndex = draftHour >= 12 ? 1 : 0;
   const updateWheelTime = (kind: 'hour' | 'minute' | 'period', index: number) => {
     const nextDate = new Date(draftDate);
     const hour = kind === 'hour' ? (wheelHours[index] ?? 12) : (draftHour % 12 || 12);
-    const minute = kind === 'minute' ? (wheelMinutes[index] ?? 0) : Math.round(draftDate.getMinutes() / 5) * 5;
+    const minute = kind === 'minute' ? (wheelMinutes[index] ?? 0) : draftDate.getMinutes();
     const period = kind === 'period' ? index : draftPeriodIndex;
     nextDate.setHours((hour % 12) + (period === 1 ? 12 : 0), minute, 0, 0);
     setDraftDate(nextDate);

@@ -43,7 +43,7 @@ export function Screen({ title, description, standalone = false, eyebrow, pageTi
             </View>}
             {headerContent && <View style={styles.headerContent}>{headerContent}</View>}
           </View>
-          <View style={styles.body}>{children}</View>
+          <View style={[styles.body, home && styles.homeBody]}>{children}</View>
         </ScreenEntrance>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingBottom: spacing.xl },
   content: { width: '100%', maxWidth: layout.contentMaxWidth, alignSelf: 'center' },
   headerBlock: { paddingHorizontal: reference.page, paddingTop: reference.headerTop },
-  homeHeader: { backgroundColor: colors.hero, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, paddingBottom: spacing.xl },
+  homeHeader: { backgroundColor: colors.hero, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, paddingBottom: spacing.lg },
   masthead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: reference.headerBottom },
   topActions: { flexDirection: 'row', alignItems: 'center' },
   iconTarget: { minWidth: layout.minTouchTarget, minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
@@ -64,4 +64,5 @@ const styles = StyleSheet.create({
   back: { minWidth: layout.minTouchTarget, minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
   headerContent: { marginTop: reference.headerBottom },
   body: { paddingHorizontal: spacing.xl, paddingTop: reference.sectionGap, gap: reference.sectionGap },
+  homeBody: { paddingTop: spacing.lg, gap: spacing.lg },
 });

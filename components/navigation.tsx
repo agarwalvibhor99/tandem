@@ -11,9 +11,9 @@ import { borders, colors, layout, reference, shadows, spacing } from '@/constant
 
 const destinations = [
   { href: '/' as const, label: 'Today', icon: Home },
+  { href: '/money' as const, label: 'Money', icon: Wallet },
   { href: '/calendar' as const, label: 'Calendar', icon: CalendarDays },
   { href: '/lists' as const, label: 'Lists', icon: ListChecks },
-  { href: '/money' as const, label: 'Money', icon: Wallet },
 ];
 export function Navigation() {
   const pathname = usePathname();
