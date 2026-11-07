@@ -10,7 +10,7 @@ export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const event = useCalendarEvent(id ?? '');
   const userId = useAuth().session?.user.id;
-  return <Screen standalone title="Edit event" description="Keep your plans up to date.">
+  return <Screen standalone title="Edit event" description="Update the time or who sees it.">
     {event.isPending && <ActivityIndicator color={colors.accent} />}
     {event.isError && <Notice error message="We couldn’t load this event." />}
     {event.data && event.data.owner_id === userId && <EventForm event={event.data} />}

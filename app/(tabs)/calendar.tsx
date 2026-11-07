@@ -1,4 +1,4 @@
-import { addDays, eachDayOfInterval, format, isSameDay, startOfDay } from 'date-fns';
+import { addDays, eachDayOfInterval, format, isSameDay, isSameMonth, startOfDay } from 'date-fns';
 import { router } from 'expo-router';
 import { CalendarPlus } from 'lucide-react-native';
 import { useState } from 'react';
@@ -23,7 +23,7 @@ import { mostUsefulFreeTime, sharedFreeTimeForEntries } from '@/lib/calendar/fre
 import { calendarWindow, eventsOnDay, filterCalendar, moveCalendar, type CalendarFilter, type CalendarView } from '@/lib/calendar/view';
 
 export default function CalendarScreen() {
-  const [view, setView] = useState<CalendarView>('Week');
+  const [view, setView] = useState<CalendarView>('Month');
   const [filter, setFilter] = useState<CalendarFilter>('Mine');
   const [anchor, setAnchor] = useState(() => startOfDay(new Date()));
   const focused = useScreenFocus();
@@ -44,7 +44,7 @@ export default function CalendarScreen() {
   const best = allDay.length ? mostUsefulFreeTime(free) : undefined;
   const days = view === 'Day' ? [] : eachDayOfInterval({ start: window.start, end: addDays(window.end, -1) });
   const periodLabel = view === 'Day' ? format(anchor, 'EEEE, MMM d') : view === 'Week' ? `${format(window.start, 'MMM d')}–${format(addDays(window.end, -1), 'MMM d')}` : format(anchor, 'MMMM yyyy');
-  return <Screen title="Calendar" description="Room for both of you, together and apart." pageTitle="Calendar" refreshing={query.isFetching} onRefresh={() => void query.refetch()} headerAction={<PressableScale accessibilityRole="button" accessibilityLabel="Add event" onPress={() => router.push('/event/new')} style={styles.headerAction}><CalendarPlus color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></PressableScale>}>
+  return <Screen title="Calendar" description="A little space for everything that matters." pageTitle="Calendar" refreshing={query.isFetching} onRefresh={() => void query.refetch()} headerAction={<PressableScale accessibilityRole="button" accessibilityLabel="Add event" onPress={() => router.push('/event/new')} style={styles.headerAction}><CalendarPlus color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></PressableScale>}>
     <Surface variant="bare" style={styles.controlPanel}>
       <SegmentedControl label="View" value={view} options={(['Day', 'Week', 'Month'] as const).map((value) => ({ value, label: value }))} onChange={setView} />
       <View style={styles.navigation}>
@@ -57,19 +57,19 @@ export default function CalendarScreen() {
       </View>
       {!isSameDay(anchor, new Date()) && <Button label="Go to today" variant="ghost" size="compact" onPress={() => setAnchor(startOfDay(new Date()))} />}
       {view === 'Week' && <View style={styles.week}>{days.map((day) => { const count = visibleOn(day).length; const selected = isSameDay(day, anchor); return <PressableScale key={day.toISOString()} accessibilityRole="button" accessibilityLabel={`${format(day, 'EEEE, MMMM d')}, ${count} ${count === 1 ? 'event' : 'events'}`} accessibilityState={{ selected }} onPress={() => setAnchor(day)} style={[styles.day, selected && styles.selected]}><Text variant="caption" tone={selected ? 'inverse' : 'secondary'}>{format(day, 'EEE')}</Text><Text variant="heading" tone={selected ? 'inverse' : 'default'}>{format(day, 'd')}</Text>{count > 0 && <View style={[styles.dot, selected && styles.dotSelected]} />}</PressableScale>; })}</View>}
-      {view === 'Month' && <View style={styles.month}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, index) => <View key={index} style={styles.monthDay}><Text variant="caption" tone="secondary">{label}</Text></View>)}{days.map((day) => { const count = visibleOn(day).length; const selected = isSameDay(day, anchor); return <PressableScale key={day.toISOString()} accessibilityRole="button" accessibilityLabel={`${format(day, 'EEEE, MMMM d')}, ${count} ${count === 1 ? 'event' : 'events'}`} accessibilityState={{ selected }} onPress={() => setAnchor(day)} style={[styles.monthDay, selected && styles.selected]}><Text variant="caption" tone={selected ? 'inverse' : isSameDay(day, new Date()) ? 'accent' : 'default'}>{format(day, 'd')}</Text>{count > 0 && <View style={[styles.monthDot, selected && styles.dotSelected]} />}</PressableScale>; })}</View>}
+      {view === 'Month' && <><View style={styles.month}>{['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, index) => <View key={index} style={styles.monthDay}><Text variant="caption" tone="secondary">{label}</Text></View>)}{days.map((day) => { const count = visibleOn(day).length; const selected = isSameDay(day, anchor); const outside = !isSameMonth(day, anchor); return <PressableScale key={day.toISOString()} accessibilityRole="button" accessibilityLabel={`${format(day, 'EEEE, MMMM d')}, ${count} ${count === 1 ? 'event' : 'events'}`} accessibilityState={{ selected }} onPress={() => setAnchor(day)} style={[styles.monthDay, selected && styles.selected]}><Text variant="caption" tone={selected ? 'inverse' : outside ? 'secondary' : isSameDay(day, new Date()) ? 'accent' : 'default'}>{format(day, 'd')}</Text>{count > 0 && <View style={[styles.monthDot, selected && styles.dotSelected]} />}</PressableScale>; })}</View><View style={styles.legend}><View style={styles.legendItem}><View style={[styles.legendDot, styles.sharedDot]} /><Text variant="caption" tone="secondary">Shared together</Text></View><View style={styles.legendItem}><View style={[styles.legendDot, styles.privateDot]} /><Text variant="caption" tone="secondary">Private / busy</Text></View></View></>}
       <SegmentedControl label="Whose plans?" value={filter} options={(['Mine', 'Partner', 'Together'] as const).map((value) => ({ value, label: value }))} onChange={setFilter} />
     </Surface>
     {filter === 'Partner' && !partner && <EmptyState title="Connect your partner" description="Once they join, you’ll see when they’re busy without seeing private details." action={{ label: 'Invite partner', onPress: () => router.push('/invite-partner') }} />}
     {filter === 'Together' && partner && query.isSuccess && <FreeTimeCard block={best} empty={allDay.length > 0 && free.length === 0} />}
     {query.isPending && <LoadingState label="Loading calendar" />}
     {query.isError && <ErrorState message="We couldn’t load these dates." onRetry={() => void query.refetch()} />}
-    {query.isSuccess && !(filter === 'Partner' && !partner) && <View style={styles.agenda}><View style={styles.agendaHeader}><Text variant="heading" accessibilityRole="header">{format(anchor, 'EEEE, MMMM d')}</Text><Text variant="caption" tone="secondary">{filter}</Text></View>{visible.length === 0 ? <EmptyState title={filter === 'Partner' ? 'Nothing on their calendar yet' : filter === 'Together' ? 'No shared plans yet' : 'Your day is clear'} description={filter === 'Mine' ? 'Add a personal or shared event when something comes up.' : 'Plans added to Tandem will appear here.'} action={filter === 'Mine' ? { label: 'Add event', onPress: () => router.push('/event/new') } : undefined} /> : visible.map((event, index) => <EventCard key={event.id ?? `busy-${event.owner_id}-${event.start_at}-${index}`} event={event} viewerId={userId} ownerName={ownerName(event.owner_id)} />)}</View>}
+    {query.isSuccess && !(filter === 'Partner' && !partner) && <View style={styles.agenda}><View style={styles.agendaHeader}><View style={styles.agendaTitle}><Text variant="heading" accessibilityRole="header">{format(anchor, 'EEEE, MMMM d')}</Text><Text variant="caption" tone="secondary">{filter}</Text></View><Button label="+ New event" variant="quiet" size="compact" onPress={() => router.push('/event/new')} /></View>{visible.length === 0 ? <EmptyState title={filter === 'Partner' ? 'Nothing on their calendar yet' : filter === 'Together' ? 'No shared plans yet' : 'Your day is clear'} description={filter === 'Mine' ? 'Add a personal or shared event when something comes up.' : 'Plans added to Tandem will appear here.'} action={filter === 'Mine' ? { label: 'Add event', onPress: () => router.push('/event/new') } : undefined} /> : visible.map((event, index) => <EventCard key={event.id ?? `busy-${event.owner_id}-${event.start_at}-${index}`} event={event} viewerId={userId} ownerName={ownerName(event.owner_id)} />)}{visible.length > 0 && <Button label="＋ Add something to our calendar" variant="quiet" onPress={() => router.push('/event/new')} />}</View>}
   </Screen>;
 }
 const styles = StyleSheet.create({
   headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft },
-  controlPanel: { gap: spacing.lg },
+  controlPanel: { gap: spacing.md },
   navigation: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
   periodCopy: { flex: 1, alignItems: 'center', gap: spacing.xs },
   arrow: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, borderWidth: borders.thin, borderColor: colors.border },
@@ -81,6 +81,12 @@ const styles = StyleSheet.create({
   month: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.xs, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted },
   monthDay: { width: `${100 / 7}%`, minHeight: 46, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md, gap: 2 },
   monthDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.accent },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, paddingHorizontal: spacing.xs },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  legendDot: { width: 7, height: 7, borderRadius: radii.pill },
+  sharedDot: { backgroundColor: colors.accent },
+  privateDot: { backgroundColor: colors.peach },
   agenda: { gap: spacing.md },
   agendaHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  agendaTitle: { flex: 1, gap: spacing.xs },
 });

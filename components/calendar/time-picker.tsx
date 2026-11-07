@@ -1,18 +1,13 @@
 import { format } from 'date-fns';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { FormField } from '@/components/ui/form-field';
-import { Notice } from '@/components/ui/notice';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { borders, colors, layout, radii, shadows, spacing } from '@/constants/theme';
-
-const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 1));
-const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, '0'));
-const periodOptions = ['AM', 'PM'];
+import { colors, radii, spacing } from '@/constants/theme';
 
 type TimePickerProps = {
   label: string;
@@ -22,52 +17,64 @@ type TimePickerProps = {
   autoOpen?: boolean;
   hideTrigger?: boolean;
   onDismiss?: () => void;
+  renderTrigger?: (open: () => void) => ReactNode;
 };
 
-function digitsOnly(value: string, maxLength: number) {
-  return value.replace(/\D/g, '').slice(0, maxLength);
+const wheelHours = Array.from({ length: 12 }, (_, index) => index + 1);
+const wheelMinutes = Array.from({ length: 60 }, (_, index) => index);
+const wheelPeriods = ['AM', 'PM'] as const;
+const WHEEL_ROW_HEIGHT = 48;
+
+type WheelColumnProps = {
+  items: readonly string[];
+  selectedIndex: number;
+  onChange: (index: number) => void;
+};
+
+function WheelColumn({ items, selectedIndex, onChange }: WheelColumnProps) {
+  const scrollRef = useRef<ScrollView>(null);
+  const clamp = (index: number) => Math.max(0, Math.min(items.length - 1, index));
+
+  useEffect(() => {
+    const timeout = setTimeout(() => scrollRef.current?.scrollTo({ y: selectedIndex * WHEEL_ROW_HEIGHT, animated: false }), 80);
+    return () => clearTimeout(timeout);
+  }, [selectedIndex]);
+
+  return <ScrollView
+    ref={scrollRef}
+    style={styles.wheelColumn}
+    contentContainerStyle={styles.wheelContent}
+    showsVerticalScrollIndicator={false}
+    snapToInterval={WHEEL_ROW_HEIGHT}
+    decelerationRate="fast"
+    scrollEventThrottle={16}
+    onScroll={(event) => onChange(clamp(Math.round(event.nativeEvent.contentOffset.y / WHEEL_ROW_HEIGHT)))}
+  >
+    {items.map((item, index) => <PressableScale
+      key={item}
+      accessibilityRole="button"
+      accessibilityState={{ selected: index === selectedIndex }}
+      onPress={() => {
+        onChange(index);
+        scrollRef.current?.scrollTo({ y: index * WHEEL_ROW_HEIGHT, animated: true });
+      }}
+      style={styles.wheelItem}
+    >
+      <Text variant={index === selectedIndex ? 'label' : 'body'} tone={index === selectedIndex ? 'default' : 'secondary'}>{item}</Text>
+    </PressableScale>)}
+  </ScrollView>;
 }
 
-function parseTimePart(value: string) {
-  if (!/^\d+$/.test(value)) return null;
-  return Number(value);
-}
-
-function PickerColumn({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
-  return <View style={styles.column}>
-    <Text variant="caption" tone="secondary" style={styles.columnLabel}>{label}</Text>
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.columnContent} accessibilityLabel={label}>
-      {options.map((option) => {
-        const selected = option === value;
-        return <PressableScale key={option} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => onChange(option)} style={[styles.option, selected && styles.selectedOption]}>
-          <Text variant={selected ? 'heading' : 'body'} tone={selected ? 'accent' : 'secondary'}>{option}</Text>
-        </PressableScale>;
-      })}
-    </ScrollView>
-  </View>;
-}
-
-export function TimePicker({ label, value, onChange, disabled, autoOpen = false, hideTrigger = false, onDismiss }: TimePickerProps) {
+export function TimePicker({ label, value, onChange, disabled, autoOpen = false, hideTrigger = false, onDismiss, renderTrigger }: TimePickerProps) {
   const [open, setOpen] = useState(false);
+  const [draftDate, setDraftDate] = useState(() => new Date(value));
   const openedAutomatically = useRef(false);
   const date = useMemo(() => new Date(value), [value]);
-  const [hour, setHour] = useState('9');
-  const [minute, setMinute] = useState('00');
-  const [period, setPeriod] = useState('AM');
-  const [exactMinute, setExactMinute] = useState('00');
-  const [error, setError] = useState<string | null>(null);
-
-  const show = useCallback(() => {
-    const nextHour = String(date.getHours() % 12 || 12);
-    const nextMinute = String(date.getMinutes()).padStart(2, '0');
-    setHour(nextHour);
-    setMinute(minuteOptions.includes(nextMinute) ? nextMinute : '00');
-    setExactMinute(nextMinute);
-    setPeriod(date.getHours() < 12 ? 'AM' : 'PM');
-    setError(null);
-    setOpen(true);
-  }, [date]);
   const close = () => { setOpen(false); onDismiss?.(); };
+  const show = useCallback(() => {
+    setDraftDate(new Date(value));
+    setOpen(true);
+  }, [value]);
 
   useEffect(() => {
     if (autoOpen && !openedAutomatically.current && !disabled) {
@@ -76,52 +83,56 @@ export function TimePicker({ label, value, onChange, disabled, autoOpen = false,
     }
   }, [autoOpen, disabled, show]);
 
-  const save = () => {
-    const parsedHour = parseTimePart(hour);
-    const parsedMinute = parseTimePart(exactMinute || minute);
-
-    if (parsedHour === null || parsedHour < 1 || parsedHour > 12 || parsedMinute === null || parsedMinute < 0 || parsedMinute > 59) {
-      setError('Enter a valid time. Use hour 1-12 and minute 0-59.');
-      return;
-    }
-
-    const next = new Date(value);
-    next.setHours((parsedHour % 12) + (period === 'PM' ? 12 : 0), parsedMinute, 0, 0);
-    onChange(next.toISOString());
-    close();
+  const nativeChange = (event: DateTimePickerEvent, next?: Date) => {
+    if (Platform.OS === 'android') setOpen(false);
+    if (event.type === 'set' && next) { setDraftDate(next); onChange(next.toISOString()); onDismiss?.(); }
   };
+  const save = () => { onChange(draftDate.toISOString()); close(); };
+  const draftHour = draftDate.getHours();
+  const draftHourIndex = (draftHour % 12 || 12) - 1;
+  const draftMinuteIndex = Math.min(wheelMinutes.length - 1, Math.round(draftDate.getMinutes() / 5));
+  const draftPeriodIndex = draftHour >= 12 ? 1 : 0;
+  const updateWheelTime = (kind: 'hour' | 'minute' | 'period', index: number) => {
+    const nextDate = new Date(draftDate);
+    const hour = kind === 'hour' ? (wheelHours[index] ?? 12) : (draftHour % 12 || 12);
+    const minute = kind === 'minute' ? (wheelMinutes[index] ?? 0) : Math.round(draftDate.getMinutes() / 5) * 5;
+    const period = kind === 'period' ? index : draftPeriodIndex;
+    nextDate.setHours((hour % 12) + (period === 1 ? 12 : 0), minute, 0, 0);
+    setDraftDate(nextDate);
+  };
+  const trigger = renderTrigger ? renderTrigger(show) : <><Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} /></>;
+
+  if (Platform.OS !== 'web' && Platform.OS === 'android' && open) return <View style={hideTrigger ? styles.hiddenGroup : styles.group}>{!hideTrigger && trigger}<DateTimePicker value={draftDate} mode="time" display="default" onChange={nativeChange} /></View>;
 
   return <View style={hideTrigger ? styles.hiddenGroup : styles.group}>
-    {!hideTrigger && <><Text variant="label">{label}</Text><Button variant="secondary" label={format(date, 'h:mm a')} disabled={disabled} onPress={show} /></>}
-    <Dialog visible={open} title={label} onClose={close}>
-      <Text tone="secondary">Scroll to choose a time. Use exact minute only when you need it.</Text>
-      <View style={styles.pickerFrame}>
-        <PickerColumn label="Hour" value={hour} options={hourOptions} onChange={setHour} />
-        <PickerColumn label="Minute" value={minute} options={minuteOptions} onChange={(next) => { setMinute(next); setExactMinute(next); }} />
-        <PickerColumn label="" value={period} options={periodOptions} onChange={setPeriod} />
-      </View>
-      <FormField
-        label="Exact minute"
-        value={exactMinute}
-        keyboardType="number-pad"
-        inputMode="numeric"
-        maxLength={2}
-        onChangeText={(next) => { setError(null); setExactMinute(digitsOnly(next, 2)); }}
-        placeholder="00"
-      />
-      {error && <Notice error message={error} />}
+    {!hideTrigger && trigger}
+    {Platform.OS !== 'web' ? <Dialog visible={open} title={label} onClose={close}>
+      <DateTimePicker value={draftDate} mode="time" display="spinner" onChange={(_, next) => next && setDraftDate(next)} />
       <View style={styles.actions}><Button label="Set time" onPress={save} grow /><Button label="Cancel" variant="secondary" onPress={close} grow /></View>
-    </Dialog>
+    </Dialog> : <Dialog visible={open} title={label} onClose={close}>
+      <View style={styles.timeHero}><Text variant="title">{format(draftDate, 'h:mm a')}</Text><Text variant="caption" tone="secondary">Scroll to choose a time.</Text></View>
+      <View style={styles.wheelFrame}>
+        <View pointerEvents="none" style={styles.wheelSelection} />
+        <View style={styles.wheels}>
+          <WheelColumn items={wheelHours.map(String)} selectedIndex={draftHourIndex} onChange={(index) => updateWheelTime('hour', index)} />
+          <WheelColumn items={wheelMinutes.map((minute) => String(minute).padStart(2, '0'))} selectedIndex={draftMinuteIndex} onChange={(index) => updateWheelTime('minute', index)} />
+          <WheelColumn items={wheelPeriods} selectedIndex={draftPeriodIndex} onChange={(index) => updateWheelTime('period', index)} />
+        </View>
+      </View>
+      <View style={styles.actions}><Button label="Set time" onPress={save} grow /><Button label="Cancel" variant="secondary" onPress={close} grow /></View>
+    </Dialog>}
   </View>;
 }
+
 const styles = StyleSheet.create({
   group: { gap: spacing.lg },
   hiddenGroup: { height: 0, overflow: 'hidden' },
-  pickerFrame: { height: layout.pickerHeight, flexDirection: 'row', gap: spacing.sm, borderRadius: radii.lg, backgroundColor: colors.surfaceMuted, padding: spacing.sm, borderWidth: borders.thin, borderColor: colors.border, ...shadows.soft },
-  column: { flex: 1, gap: spacing.xs },
-  columnLabel: { textAlign: 'center' },
-  columnContent: { paddingVertical: spacing.xl, gap: spacing.xs },
-  option: { minHeight: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.md },
-  selectedOption: { backgroundColor: colors.surface, borderWidth: borders.strong, borderColor: colors.accent },
+  timeHero: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.sm },
+  wheelFrame: { position: 'relative', height: WHEEL_ROW_HEIGHT * 5, overflow: 'hidden', borderRadius: radii.lg, backgroundColor: colors.surfaceMuted },
+  wheels: { flexDirection: 'row', flex: 1, zIndex: 1 },
+  wheelColumn: { flex: 1 },
+  wheelContent: { paddingVertical: WHEEL_ROW_HEIGHT * 2 },
+  wheelItem: { height: WHEEL_ROW_HEIGHT, alignItems: 'center', justifyContent: 'center' },
+  wheelSelection: { position: 'absolute', zIndex: 0, left: spacing.xs, right: spacing.xs, top: WHEEL_ROW_HEIGHT * 2, height: WHEEL_ROW_HEIGHT, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   actions: { flexDirection: 'row', gap: spacing.sm },
 });
