@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, subDays } from 'date-fns';
 import { router } from 'expo-router';
+import { ChevronDown } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -13,6 +14,7 @@ import { IconTile } from '@/components/ui/icon-tile';
 import { Notice } from '@/components/ui/notice';
 import { Text } from '@/components/ui/text';
 import { PersonSelector } from '@/components/ui/person-selector';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { VisibilitySegment } from '@/components/ui/visibility-segment';
 import { borders, colors, layout, radii, spacing, typography } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,6 +65,7 @@ export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>(() => Object.fromEntries((expense?.splits ?? []).map((split) => [split.user_id, String(split.amount)])));
   const [dateOpen, setDateOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(() => !!expense?.notes);
+  const [categoryOpen, setCategoryOpen] = useState(() => !!expense);
   const memberRows = useMemo(() => members.data ?? [], [members.data]);
   const memberIds = useMemo(() => memberRows.map((member) => member.user_id), [memberRows]);
   const form = useForm<Values & { visibility: ExpenseVisibility }>({ resolver: zodResolver(expenseFormSchema), defaultValues: { title: expense?.title ?? '', amountText: expense ? String(expense.amount) : '', category: expense?.category ?? 'Groceries', paid_by: expense?.paid_by ?? userId, splitMode: splitModeFor(expense), expense_date: expense?.expense_date ?? today(), notes: expense?.notes ?? '', visibility: expense?.visibility ?? initialVisibility ?? 'private' } });
@@ -112,11 +115,11 @@ export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?
     </View>} />
     <Controller control={form.control} name="title" render={({ field, fieldState }) => <FormField label="What was it?" placeholder="e.g. Weekly groceries" value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} error={fieldState.error?.message} maxLength={160} editable={!busy} />} />
     <Controller control={form.control} name="category" render={({ field }) => <View style={styles.section}>
-      <Text variant="label">Category</Text>
-      <View style={styles.tileGrid}>{expenseCategories.map((category) => {
+      <View style={styles.sectionHeader}><Text variant="label">Category</Text>{categoryOpen ? <Button label="Done" variant="quiet" size="compact" onPress={() => setCategoryOpen(false)} /> : <PressableScale accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen(true)} style={styles.categoryTrigger}><Text variant="caption" tone="accent">{categoryEmoji[field.value]} {field.value === 'Entertainment' ? 'Fun' : field.value === 'Transportation' ? 'Transport' : field.value}</Text><ChevronDown color={colors.accent} size={layout.iconSize} strokeWidth={1.75} /></PressableScale>}</View>
+      {categoryOpen && <View style={styles.tileGrid}>{expenseCategories.map((category) => {
         const selected = field.value === category;
-        return <IconTile key={category} icon={categoryEmoji[category]} label={category === 'Entertainment' ? 'Fun' : category === 'Transportation' ? 'Transport' : category} selected={selected} onPress={() => field.onChange(category)} />;
-      })}</View>
+        return <IconTile key={category} icon={categoryEmoji[category]} label={category === 'Entertainment' ? 'Fun' : category === 'Transportation' ? 'Transport' : category} selected={selected} onPress={() => { field.onChange(category); setCategoryOpen(false); }} />;
+      })}</View>}
     </View>} />
     <Controller control={form.control} name="visibility" render={({ field }) => <View style={styles.section}>
       <Text variant="label">Spending</Text>
@@ -124,8 +127,8 @@ export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?
       <Text variant="caption" tone="secondary">{field.value === 'shared' ? 'Both of you can see this expense and the split.' : connected ? 'Only you can see this expense.' : 'Only you can see this expense. Connect your partner to add couple spending.'}</Text>
     </View>} />
     {visibility === 'shared' && <View style={styles.panel}>
-      <Controller control={form.control} name="paid_by" render={({ field }) => <PersonSelector label="Who paid?" value={field.value} onChange={(value) => field.onChange(value ?? userId)} people={memberRows} userId={userId} disabled={busy} />} />
-      <Controller control={form.control} name="splitMode" render={({ field }) => <ChoiceChips label="How do you split it?" value={field.value} options={[{ value: 'equal' as const, label: 'Equally' }, { value: 'one_payer' as const, label: `All on ${nameFor(paidBy, userId, memberRows).replace('You', 'you')}` }, { value: 'custom' as const, label: 'Custom' }]} onChange={field.onChange} disabled={busy} />} />
+      <Controller control={form.control} name="paid_by" render={({ field }) => <PersonSelector label="Who paid?" value={field.value} onChange={(value) => field.onChange(value ?? userId)} people={memberRows} userId={userId} disabled={busy} compact />} />
+      <Controller control={form.control} name="splitMode" render={({ field }) => <ChoiceChips label="How do you split it?" value={field.value} options={[{ value: 'equal' as const, label: 'Equally' }, { value: 'one_payer' as const, label: `All on ${nameFor(paidBy, userId, memberRows).replace('You', 'you')}` }, { value: 'custom' as const, label: 'Custom' }]} onChange={field.onChange} disabled={busy} compact />} />
       {splitMode === 'custom' && <View style={styles.custom}><Text variant="caption" tone="secondary">Shares must add up to {amountCents > 0 ? money(amountCents) : 'the amount'}.</Text>{memberRows.map((member) => <FormField key={member.user_id} label={`${member.user_id === userId ? 'Your' : member.name} share`} placeholder="0.00" keyboardType="decimal-pad" value={customAmounts[member.user_id] ?? ''} onChangeText={(value) => setCustomAmounts((current) => ({ ...current, [member.user_id]: value }))} editable={!busy} />)}</View>}
     </View>}
     <View style={styles.section}><Text variant="label">When</Text><View style={styles.chipRow}>{[{ label: 'Today', value: today() }, { label: 'Yesterday', value: yesterday() }].map((option) => <Pressable key={option.label} accessibilityRole="button" accessibilityState={{ selected: expenseDate === option.value }} onPress={() => form.setValue('expense_date', option.value)} style={[styles.softChip, expenseDate === option.value && styles.softChipSelected]}><Text variant="label" tone={expenseDate === option.value ? 'inverse' : 'default'}>{option.label}</Text></Pressable>)}<Pressable accessibilityRole="button" accessibilityState={{ selected: dateOpen }} onPress={() => setDateOpen((open) => !open)} style={styles.softChip}><Text variant="label">Pick a date</Text></Pressable></View>{dateOpen && <Controller control={form.control} name="expense_date" render={({ field }) => <DatePicker value={`${field.value}T12:00:00`} label="Expense date" prompt="When was it?" allowClear={false} disabled={busy} onChange={(value) => { if (value) field.onChange(format(new Date(value), 'yyyy-MM-dd')); }} />} />}</View>
@@ -140,13 +143,15 @@ export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?
 const styles = StyleSheet.create({
   form: { gap: layout.fieldGap },
   hero: { alignItems: 'center', gap: spacing.sm },
-  amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderBottomWidth: borders.thin, borderBottomColor: colors.border, minWidth: layout.amountRowMinWidth },
-  currency: { ...typography.moneyCurrency, color: colors.textSecondary },
-  amountInput: { ...typography.money, minWidth: layout.amountInputMinWidth, color: colors.text, textAlign: 'center' },
+  amountRow: { width: 280, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderBottomWidth: borders.thin, borderBottomColor: colors.border },
+  currency: { ...typography.moneyCurrency, color: colors.textSecondary, width: 44, textAlign: 'right' },
+  amountInput: { ...typography.money, flex: 1, minWidth: 0, color: colors.text, textAlign: 'center' },
   error: { color: colors.error },
   section: { gap: spacing.sm },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  categoryTrigger: { minHeight: layout.smallControlHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radii.pill, backgroundColor: colors.accentSoft },
   tileGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  panel: { gap: spacing.lg, padding: spacing.lg, borderRadius: radii.lg, borderWidth: borders.strong, borderColor: colors.border, backgroundColor: colors.surface },
+  panel: { gap: spacing.md, padding: spacing.md, borderRadius: radii.md, backgroundColor: colors.surfaceMuted },
   custom: { gap: spacing.md, padding: spacing.lg, backgroundColor: colors.surfaceMuted, borderRadius: radii.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   softChip: { minHeight: layout.minTouchTarget, borderRadius: radii.pill, backgroundColor: colors.surfaceMuted, paddingHorizontal: spacing.lg, justifyContent: 'center' },

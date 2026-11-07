@@ -1,7 +1,7 @@
 import { ChoiceChips } from '@/components/ui/choice-chips';
 
 type Person = { user_id: string; name: string };
-export function PersonSelector({ label, value, onChange, people, userId, allowAnyone = false, disabled }: {
+export function PersonSelector({ label, value, onChange, people, userId, allowAnyone = false, disabled, compact = false }: {
   label: string;
   value: string | null;
   onChange: (value: string | null) => void;
@@ -9,9 +9,10 @@ export function PersonSelector({ label, value, onChange, people, userId, allowAn
   userId: string;
   allowAnyone?: boolean;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   return <ChoiceChips label={label} value={value ?? ''} options={[
     ...(allowAnyone ? [{ value: '', label: 'Anyone' }] : []),
     ...people.map((person) => ({ value: person.user_id, label: person.user_id === userId ? 'You' : person.name })),
-  ]} onChange={(next) => onChange(next || null)} disabled={disabled} />;
+  ]} onChange={(next) => onChange(next || null)} disabled={disabled} compact={compact} />;
 }
