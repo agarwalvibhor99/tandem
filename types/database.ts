@@ -44,7 +44,7 @@ export type Database = {
         Update: Partial<Pick<Profile, 'name' | 'avatar_url' | 'timezone' | 'couple_onboarding_skipped_at'>>;
         Relationships: [];
       };
-      partner_nudges: { Row: PartnerNudge; Insert: { couple_id: string; type: PartnerNudge['type'] }; Update: never; Relationships: [] };
+      partner_nudges: { Row: PartnerNudge; Insert: { couple_id: string; type: PartnerNudge['type'] }; Update: Pick<PartnerNudge, 'status'>; Relationships: [] };
     };
     Views: { [_ in never]: never };
     Functions: {

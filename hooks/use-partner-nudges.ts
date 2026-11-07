@@ -31,5 +31,18 @@ export function usePartnerNudges(active = true) {
     mutationFn: (type: PartnerNudgeType) => getPartnerNudgeApi().send(coupleId, type),
     onSuccess: (nudge) => client.setQueryData<PartnerNudge[]>(nudgeKeys.all(userId, coupleId), (current) => [nudge, ...(current ?? [])].slice(0, 20)),
   });
-  return { couple, query, send };
+  const dismiss = useMutation({
+    mutationFn: (id: string) => getPartnerNudgeApi().setStatus(id, 'hidden'),
+    onMutate: async (id) => {
+      await client.cancelQueries({ queryKey: nudgeKeys.all(userId, coupleId) });
+      const key = nudgeKeys.all(userId, coupleId);
+      const previous = client.getQueryData<PartnerNudge[]>(key);
+      client.setQueryData<PartnerNudge[]>(key, current => (current ?? []).filter(nudge => nudge.id !== id));
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      client.setQueryData(nudgeKeys.all(userId, coupleId), context?.previous);
+    },
+  });
+  return { couple, query, send, dismiss };
 }

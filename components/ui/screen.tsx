@@ -10,8 +10,8 @@ import { ScreenEntrance } from '@/components/ui/motion';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { colors, layout, radii, reference, spacing } from '@/constants/theme';
 
-type Props = PropsWithChildren<{ title: string; description: string; standalone?: boolean; eyebrow?: string; pageTitle?: string; headerAction?: ReactNode; headerContent?: ReactNode; variant?: 'default' | 'home'; refreshing?: boolean; onRefresh?: () => void }>;
-export function Screen({ title, description, standalone = false, eyebrow, pageTitle, headerAction, headerContent, variant = 'default', refreshing = false, onRefresh, children }: Props) {
+type Props = PropsWithChildren<{ title: string; description: string; standalone?: boolean; eyebrow?: string; pageTitle?: string; headerAction?: ReactNode; headerContent?: ReactNode; overlay?: ReactNode; variant?: 'default' | 'home'; refreshing?: boolean; onRefresh?: () => void }>;
+export function Screen({ title, description, standalone = false, eyebrow, pageTitle, headerAction, headerContent, overlay, variant = 'default', refreshing = false, onRefresh, children }: Props) {
   const pathname = usePathname();
   const featurePage = standalone && !['/', '/welcome', '/login', '/sign-up'].includes(pathname);
   const backDestination = pathname.startsWith('/task') ? '/tasks' as const : pathname.startsWith('/list') ? '/lists' as const : pathname.startsWith('/event') ? '/calendar' as const : pathname.startsWith('/expense') ? '/money' as const : pathname.startsWith('/reminder/') ? '/reminders' as const : pathname.startsWith('/date/') || pathname === '/date-planner' ? '/dates' as const : '/more' as const;
@@ -47,7 +47,8 @@ export function Screen({ title, description, standalone = false, eyebrow, pageTi
         </ScreenEntrance>
       </ScrollView>
     </KeyboardAvoidingView>
-  </SafeAreaView>;
+      {overlay}
+    </SafeAreaView>;
 }
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background }, keyboard: { flex: 1 },
