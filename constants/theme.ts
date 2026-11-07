@@ -23,6 +23,16 @@ const lightTokens = {
   peach: '#F5D6BF',
   sand: '#E8E4D6',
   sage: '#A8BCB0',
+  nudgeRose: '#C66B83',
+  nudgeRoseVein: '#8D3D59',
+  nudgeCoffee: '#8C6046',
+  nudgeRoseLight: '#F2A8B7',
+  nudgeRoseDeep: '#9E405F',
+  nudgeStem: '#517E60',
+  nudgeLeaf: '#8DB798',
+  nudgeCoffeeLight: '#C79A73',
+  nudgeCup: '#FFF9EF',
+  nudgeCupShade: '#DCD7CC',
 } as const;
 
 const darkTokens = {
@@ -48,6 +58,16 @@ const darkTokens = {
   peach: '#4B3F32',
   sand: '#3E4232',
   sage: '#89AD91',
+  nudgeRose: '#DFA0B2',
+  nudgeRoseVein: '#9E5A71',
+  nudgeCoffee: '#C79A77',
+  nudgeRoseLight: '#F0B9C7',
+  nudgeRoseDeep: '#A95470',
+  nudgeStem: '#9BC7A0',
+  nudgeLeaf: '#6B9474',
+  nudgeCoffeeLight: '#E0B48E',
+  nudgeCup: '#F5EEE4',
+  nudgeCupShade: '#BAB4AA',
 } as const;
 
 export const colorTokens = { light: lightTokens, dark: darkTokens } as const;
@@ -82,6 +102,16 @@ export const colors = {
   successSoft: tokens.successSoft,
   partner: tokens.muted,
   partnerSoft: tokens.peach,
+  nudgeRose: tokens.nudgeRose,
+  nudgeRoseVein: tokens.nudgeRoseVein,
+  nudgeCoffee: tokens.nudgeCoffee,
+  nudgeRoseLight: tokens.nudgeRoseLight,
+  nudgeRoseDeep: tokens.nudgeRoseDeep,
+  nudgeStem: tokens.nudgeStem,
+  nudgeLeaf: tokens.nudgeLeaf,
+  nudgeCoffeeLight: tokens.nudgeCoffeeLight,
+  nudgeCup: tokens.nudgeCup,
+  nudgeCupShade: tokens.nudgeCupShade,
   together: tokens.accent,
   togetherSoft: tokens.accentSoft,
 } as const;
@@ -175,6 +205,9 @@ export const layout = {
   amountCurrencyLineHeight: 64,
   amountInputMinWidth: 180,
   amountRowMinWidth: 240,
+  nudgeHeroSize: 240,
+  nudgeCupSize: 146,
+  nudgeTraceSize: 58,
 } as const;
 
 export const borders = { thin: 1, strong: 1.5, focus: 2 } as const;

@@ -1,4 +1,4 @@
-export const partnerNudgeTypes = ['rose', 'heart', 'coffee'] as const;
+export const partnerNudgeTypes = ['rose', 'heart', 'coffee', 'beer'] as const;
 export type PartnerNudgeType = (typeof partnerNudgeTypes)[number];
 export const partnerNudgeStatuses = ['visible', 'hidden'] as const;
 export type PartnerNudgeStatus = (typeof partnerNudgeStatuses)[number];
