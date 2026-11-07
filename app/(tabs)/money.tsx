@@ -1,7 +1,7 @@
 import { Reveal } from '@/components/ui/motion';
-import { format, parseISO } from 'date-fns';
+import { addMonths, addQuarters, addWeeks, format, getQuarter, isSameDay, parseISO } from 'date-fns';
 import { router } from 'expo-router';
-import { ChevronRight, Wallet } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Wallet } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import { colors, layout, radii, reference, spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useCoupleMembers } from '@/hooks/use-couple-members';
 import { useExpenseActions, useExpenseBalance, useExpenseSummary, useExpenses } from '@/hooks/use-expenses';
-import { categoryBreakdown, costTier, expenseTotal, expensesInPeriod, payerBreakdown, periodLabel, type ExpensePeriod } from '@/lib/expenses/analytics';
+import { categoryBreakdown, costTier, expenseTotal, expensesInPeriod, payerBreakdown, periodInterval, type ExpensePeriod } from '@/lib/expenses/analytics';
 import { fromCents } from '@/lib/expenses/calculations';
 import { expenseExportFilename, expensesToCsv } from '@/lib/expenses/export';
 import { filterExpenses } from '@/lib/expenses/filters';
@@ -28,6 +28,19 @@ import { expenseCategories, type Expense, type ExpenseCategory, type ExpenseVisi
 const money = (value: number, currency = 'USD') => new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
 const periodOptions: { value: ExpensePeriod; label: string }[] = [{ value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }, { value: 'quarter', label: 'Quarter' }];
 const categoryEmoji: Record<string, string> = { Groceries: '🛒', Dining: '🍽️', Household: '🏠', Travel: '✈️', Entertainment: '🎟️', Transportation: '🚗', Utilities: '💡', Shopping: '🛍️', Other: '✨' };
+
+function periodWindowLabel(period: ExpensePeriod, anchor: Date) {
+  const interval = periodInterval(period, anchor);
+  if (period === 'week') return `${format(interval.start, 'MMM d')}–${format(interval.end, 'MMM d')}`;
+  if (period === 'quarter') return `Q${getQuarter(anchor)} ${format(anchor, 'yyyy')}`;
+  return format(interval.start, 'MMMM yyyy');
+}
+
+function shiftPeriod(period: ExpensePeriod, anchor: Date, direction: -1 | 1) {
+  if (period === 'week') return addWeeks(anchor, direction);
+  if (period === 'quarter') return addQuarters(anchor, direction);
+  return addMonths(anchor, direction);
+}
 
 function tierStyles(expense: Expense) {
   const tier = costTier(Number(expense.amount));
@@ -42,6 +55,7 @@ export default function MoneyScreen() {
   const connected = (members.data?.length ?? 0) > 1;
   const [view, setView] = useState<ExpenseVisibility>('shared');
   const [period, setPeriod] = useState<ExpensePeriod>('month');
+  const [periodAnchor, setPeriodAnchor] = useState(() => new Date());
   const [expenseName, setExpenseName] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'all'>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -56,7 +70,7 @@ export default function MoneyScreen() {
   const history = useExpenses(selectedView);
   const balance = useExpenseBalance(selectedView, !members.isPending && (selectedView === 'private' || connected));
   const { create: createExpense } = useExpenseActions();
-  const periodExpenses = useMemo(() => expensesInPeriod(history.query.data ?? [], period), [history.query.data, period]);
+  const periodExpenses = useMemo(() => expensesInPeriod(history.query.data ?? [], period, periodAnchor), [history.query.data, period, periodAnchor]);
   const historyTotal = useMemo(() => expenseTotal(history.query.data ?? []), [history.query.data]);
   const allTimeTotal = balance.query.data?.totalAmount ?? historyTotal;
   const allTimeCount = history.query.data?.length ?? 0;
@@ -74,6 +88,10 @@ export default function MoneyScreen() {
   const youPaid = payers.find((payer) => payer.userId === userId)?.amount ?? 0;
   const partnerPaid = partnerId ? payers.find((payer) => payer.userId === partnerId)?.amount ?? 0 : 0;
   const shared = selectedView === 'shared';
+  const currentPeriod = periodInterval(period, new Date());
+  const selectedPeriod = periodInterval(period, periodAnchor);
+  const isCurrentPeriod = isSameDay(selectedPeriod.start, currentPeriod.start);
+  const canGoNext = selectedPeriod.start < currentPeriod.start;
   const allTimeBalance = balance.query.data?.balance;
   const refreshing = members.isFetching || summary.query.isFetching || history.query.isFetching || balance.query.isFetching;
   const refresh = () => { void members.refetch(); void summary.query.refetch(); void history.query.refetch(); void balance.query.refetch(); };
@@ -166,7 +184,17 @@ export default function MoneyScreen() {
       </>}
     </Dialog>
 
-    <SegmentedControl label="Period" value={period} options={periodOptions} onChange={setPeriod} />
+    <View style={styles.periodSection}>
+      <View style={styles.periodHeader}>
+        <Text variant="caption" tone="secondary">Spending period</Text>
+        <View style={styles.periodNavigator}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Previous period" onPress={() => setPeriodAnchor((anchor) => shiftPeriod(period, anchor, -1))} style={styles.periodArrow}><ChevronLeft color={colors.accent} size={layout.iconSize} /></Pressable>
+          <Text variant="caption" tone="accent" style={styles.periodWindow}>{periodWindowLabel(period, periodAnchor)}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Next period" disabled={!canGoNext} onPress={() => setPeriodAnchor((anchor) => shiftPeriod(period, anchor, 1))} style={[styles.periodArrow, !canGoNext && styles.periodArrowDisabled]}><ChevronRight color={canGoNext ? colors.accent : colors.disabledInk} size={layout.iconSize} /></Pressable>
+        </View>
+      </View>
+      <SegmentedControl label="Period" value={period} options={periodOptions} compact onChange={(value) => { setPeriod(value); setPeriodAnchor(new Date()); }} />
+    </View>
 
     {!connected && !members.isPending && !members.isError && <Notice message="Your spending is private. Connect your partner to track couple spending." />}
     {summary.query.isError && <Notice error message="We couldn’t load this month’s balance." />}
@@ -174,7 +202,7 @@ export default function MoneyScreen() {
     <Surface variant="inset" style={styles.spendingSummary}>
       <View style={styles.summaryHeader}>
         <View style={styles.summaryCopy}>
-          <Text variant="label" tone="accent">{shared ? 'Couple spending' : 'Personal spending'} · {periodLabel(period)}</Text>
+          <Text variant="label" tone="accent">{shared ? 'Couple spending' : 'Personal spending'} · {periodWindowLabel(period, periodAnchor)}</Text>
           {history.query.isPending ? <ActivityIndicator color={colors.accent} accessibilityLabel="Loading spending summary" /> : history.query.isError ? <Button label="Try again" variant="quiet" onPress={() => void history.query.refetch()} /> : <Text variant="display">{money(periodTotal)}</Text>}
         </View>
         <View style={styles.countPill}><Text variant="caption" tone="accent">{periodExpenses.length} {periodExpenses.length === 1 ? 'expense' : 'expenses'}</Text></View>
@@ -182,7 +210,7 @@ export default function MoneyScreen() {
       <View style={styles.summaryStats}>
         <View style={styles.stat}><Text variant="caption" tone="secondary">You paid</Text><Text variant="label">{money(youPaid)}</Text></View>
         {shared ? <View style={styles.stat}><Text variant="caption" tone="secondary">{partnerId ? nameFor(partnerId) : 'Partner'} paid</Text><Text variant="label">{money(partnerPaid)}</Text></View> : <View style={styles.stat}><Text variant="caption" tone="secondary">Entries</Text><Text variant="label">{periodExpenses.length}</Text></View>}
-        <View style={styles.stat}><Text variant="caption" tone="secondary">{shared && period === 'month' ? 'To settle' : 'Paid most'}</Text><Text variant="label" numberOfLines={2}>{shared && period === 'month' && settlement ? `${nameFor(settlement.user_id)} owes ${money(-settlement.net_amount)}` : shared && period === 'month' ? 'Nothing to settle' : topPayer ? nameFor(topPayer.userId) : '—'}</Text></View>
+        <View style={styles.stat}><Text variant="caption" tone="secondary">{shared && period === 'month' && isCurrentPeriod ? 'To settle' : 'Paid most'}</Text><Text variant="label" numberOfLines={2}>{shared && period === 'month' && isCurrentPeriod && settlement ? `${nameFor(settlement.user_id)} owes ${money(-settlement.net_amount)}` : shared && period === 'month' && isCurrentPeriod ? 'Nothing to settle' : topPayer ? nameFor(topPayer.userId) : '—'}</Text></View>
       </View>
     </Surface>
 
@@ -190,7 +218,7 @@ export default function MoneyScreen() {
       <Text variant="heading" accessibilityRole="header">Spending by category</Text>
       {history.query.isPending && <ActivityIndicator color={colors.accent} accessibilityLabel="Loading category spending" />}
       {history.query.isError && <Notice error message="We couldn’t load category spending." />}
-      {history.query.isSuccess && categories.length === 0 && <Text tone="secondary">No {shared ? 'couple' : 'personal'} spending in {periodLabel(period).toLowerCase()}.</Text>}
+      {history.query.isSuccess && categories.length === 0 && <Text tone="secondary">No {shared ? 'couple' : 'personal'} spending in {periodWindowLabel(period, periodAnchor).toLowerCase()}.</Text>}
       <View style={styles.chart}>{topCategories.map((entry, index) => <View key={entry.category} style={styles.chartColumn} accessible accessibilityLabel={`${entry.category}: ${money(entry.amount)}, ${Math.round(entry.percentage * 100)} percent`}>
         <Text variant="micro">{money(entry.amount)}</Text>
         <View style={styles.chartTrack}><Reveal variant="chart" style={[styles.chartBar, { height: `${Math.max(8, entry.amount / Math.max(...topCategories.map(category => category.amount)) * 100)}%`, backgroundColor: reference.chartColors[index] }]} /></View>
@@ -234,6 +262,12 @@ const styles = StyleSheet.create({
   balanceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   balanceCopy: { flex: 1 },
   allTimeValues: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  periodSection: { gap: spacing.sm },
+  periodHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  periodNavigator: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  periodArrow: { width: layout.smallControlHeight, height: layout.smallControlHeight, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft },
+  periodArrowDisabled: { opacity: 0.45 },
+  periodWindow: { minWidth: 104, textAlign: 'center' },
   headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.accentSoft },
   pressed: { opacity: 0.7 },
   summaryHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md },
