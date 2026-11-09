@@ -57,7 +57,7 @@ function splitSummary({ amountCents, visibility, splitMode, paidBy, memberIds, u
   return `${nameFor(other, userId, members)} owes ${nameFor(paidBy, userId, members).toLowerCase()} ${money(owedToPayer)}.`;
 }
 
-export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?: ExpenseVisibility; expense?: ExpenseDetail }) {
+export function ExpenseForm({ initialVisibility, expense, initialValues }: { initialVisibility?: ExpenseVisibility; expense?: ExpenseDetail; initialValues?: { title?: string; amount?: string } }) {
   const userId = useAuth().session?.user.id ?? '';
   const couple = useCurrentCouple();
   const members = useCoupleMembers();
@@ -68,7 +68,7 @@ export function ExpenseForm({ initialVisibility, expense }: { initialVisibility?
   const [categoryOpen, setCategoryOpen] = useState(() => !!expense);
   const memberRows = useMemo(() => members.data ?? [], [members.data]);
   const memberIds = useMemo(() => memberRows.map((member) => member.user_id), [memberRows]);
-  const form = useForm<Values & { visibility: ExpenseVisibility }>({ resolver: zodResolver(expenseFormSchema), defaultValues: { title: expense?.title ?? '', amountText: expense ? String(expense.amount) : '', category: expense?.category ?? 'Groceries', paid_by: expense?.paid_by ?? userId, splitMode: splitModeFor(expense), expense_date: expense?.expense_date ?? today(), notes: expense?.notes ?? '', visibility: expense?.visibility ?? initialVisibility ?? 'private' } });
+  const form = useForm<Values & { visibility: ExpenseVisibility }>({ resolver: zodResolver(expenseFormSchema), defaultValues: { title: expense?.title ?? initialValues?.title ?? '', amountText: expense ? String(expense.amount) : initialValues?.amount ?? '', category: expense?.category ?? 'Groceries', paid_by: expense?.paid_by ?? userId, splitMode: splitModeFor(expense), expense_date: expense?.expense_date ?? today(), notes: expense?.notes ?? '', visibility: expense?.visibility ?? initialVisibility ?? 'private' } });
   const amountText = useWatch({ control: form.control, name: 'amountText' });
   const splitMode = useWatch({ control: form.control, name: 'splitMode' });
   const visibility = useWatch({ control: form.control, name: 'visibility' });

@@ -37,7 +37,7 @@ function TaskDueDateRow({ value, onChange, disabled }: { value: string | null; o
   return <DatePicker value={value} onChange={(next) => onChange(next ? withDefaultTaskTime(new Date(next), value) : null)} disabled={disabled} renderTrigger={(open) => <GroupRow icon={CalendarDays} title="Due date" value={dueLabel(value)} accessibilityLabel="Choose due date" disabled={disabled} onPress={open} />} />;
 }
 
-export function TaskForm({ task }: { task?: Task }) {
+export function TaskForm({ task, initialValues }: { task?: Task; initialValues?: { title?: string; dueAt?: string } }) {
   const userId = useAuth().session!.user.id;
   const couple = useCurrentCouple();
   const members = useCoupleMembers();
@@ -46,7 +46,7 @@ export function TaskForm({ task }: { task?: Task }) {
   const [expanded, setExpanded] = useState(!!task?.description || task?.priority === 'high');
   const [timeOpen, setTimeOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const form = useForm<TaskInput>({ resolver: zodResolver(taskSchema), defaultValues: task ? valuesFromTask(task) : { title: '', description: '', due_at: null, reminder_offset_minutes: null, priority: 'normal', category: 'Other', visibility: 'private', couple_id: null, assigned_to: userId } });
+  const form = useForm<TaskInput>({ resolver: zodResolver(taskSchema), defaultValues: task ? valuesFromTask(task) : { title: initialValues?.title ?? '', description: '', due_at: initialValues?.dueAt ?? null, reminder_offset_minutes: null, priority: 'normal', category: 'Other', visibility: 'private', couple_id: null, assigned_to: userId } });
   const visibility = useWatch({ control: form.control, name: 'visibility' });
   const title = useWatch({ control: form.control, name: 'title' });
   const dueAt = useWatch({ control: form.control, name: 'due_at' });

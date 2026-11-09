@@ -29,12 +29,12 @@ const categoryEmoji: Record<GroceryCategory, string> = {
   Produce: '🥬', Dairy: '🥛', Meat: '🥩', Frozen: '🧊', Pantry: '🥫', Snacks: '🍪', Household: '🧴', Other: '🛒',
 };
 
-export function ItemForm({ listId, type, item, onSaved, compact = false, initialDetailsOpen = false }: { listId: string; type: ListType; item?: ListItem; onSaved: () => void; compact?: boolean; initialDetailsOpen?: boolean }) {
+export function ItemForm({ listId, type, item, onSaved, compact = false, initialDetailsOpen = false, initialName }: { listId: string; type: ListType; item?: ListItem; onSaved: () => void; compact?: boolean; initialDetailsOpen?: boolean; initialName?: string }) {
   const { add, edit } = useListActions();
   const [baseline, setBaseline] = useState(item);
   const [detailsOpen, setDetailsOpen] = useState(() => !compact && (initialDetailsOpen || (!!item && (!!item.quantity || !!item.category || !!item.notes))));
   const busy = add.isPending || edit.isPending;
-  const form = useForm<ListItemInput>({ resolver: zodResolver(itemSchema), defaultValues: item ? { list_id: item.list_id, name: item.name, quantity: item.quantity, category: item.category, notes: item.notes } : { list_id: listId, name: '', quantity: null, category: null, notes: '' } });
+  const form = useForm<ListItemInput>({ resolver: zodResolver(itemSchema), defaultValues: item ? { list_id: item.list_id, name: item.name, quantity: item.quantity, category: item.category, notes: item.notes } : { list_id: listId, name: initialName ?? '', quantity: null, category: null, notes: '' } });
   const changedElsewhere = !!item && !!baseline && item.updated_at !== baseline.updated_at;
   const submit = form.handleSubmit((value) => {
     const input = { ...value, list_id: listId, category: type === 'Groceries' ? value.category : null };
