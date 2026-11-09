@@ -33,7 +33,7 @@ function reminderDateLabel(value: string) { return format(new Date(value), 'MMM 
 function recurrenceLabel(value: Values['recurrence']) { return value === 'none' ? 'No repeat' : value.charAt(0).toUpperCase() + value.slice(1); }
 function onDate(value: string | null, current: string) { if (!value) return current; const selected = new Date(value); const next = new Date(current); next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate()); return next.toISOString(); }
 
-export function ReminderForm({ reminder, initialVisibility }: { reminder?: Reminder; initialVisibility?: ReminderVisibility }) {
+export function ReminderForm({ reminder, initialVisibility, initialValues }: { reminder?: Reminder; initialVisibility?: ReminderVisibility; initialValues?: { title?: string; remindAt?: string } }) {
   const userId = useAuth().session?.user.id ?? '';
   const couple = useCurrentCouple();
   const members = useCoupleMembers();
@@ -43,7 +43,7 @@ export function ReminderForm({ reminder, initialVisibility }: { reminder?: Remin
   const [repeatOpen, setRepeatOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(!!reminder?.notes);
   const defaultVisibility = reminder?.visibility ?? initialVisibility ?? 'private';
-  const form = useForm<Values>({ resolver: zodResolver(reminderSchema), defaultValues: reminder ? valuesFrom(reminder) : { couple_id: defaultVisibility === 'shared' ? couple.data?.id ?? null : null, assigned_to: null, title: '', notes: '', remind_at: initialTime(), visibility: defaultVisibility, recurrence: 'none' } });
+  const form = useForm<Values>({ resolver: zodResolver(reminderSchema), defaultValues: reminder ? valuesFrom(reminder) : { couple_id: defaultVisibility === 'shared' ? couple.data?.id ?? null : null, assigned_to: null, title: initialValues?.title ?? '', notes: '', remind_at: initialValues?.remindAt ?? initialTime(), visibility: defaultVisibility, recurrence: 'none' } });
   const visibility = useWatch({ control: form.control, name: 'visibility' });
   const title = useWatch({ control: form.control, name: 'title' });
   const remindAt = useWatch({ control: form.control, name: 'remind_at' });

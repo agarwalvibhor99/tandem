@@ -35,7 +35,7 @@ function onDate(value: string | null, current: string) {
   next.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
   return next.toISOString();
 }
-export function EventForm({ event }: { event?: CalendarEvent }) {
+export function EventForm({ event, initialValues }: { event?: CalendarEvent; initialValues?: { title?: string; startAt?: string } }) {
   const userId = useAuth().session?.user.id;
   const couple = useCurrentCouple();
   const { create, edit } = useCalendarActions();
@@ -45,8 +45,9 @@ export function EventForm({ event }: { event?: CalendarEvent }) {
   const [endOpen, setEndOpen] = useState(false);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [conflictError, setConflictError] = useState<string | null>(null);
-  const start = initialStart();
-  const form = useForm<CalendarEventInput>({ resolver: zodResolver(createCalendarEventSchema()), defaultValues: event ? valuesFrom(event) : { couple_id: null, title: '', start_at: start.toISOString(), end_at: addHours(start, 1).toISOString(), visibility: 'private', location: '', notes: '', reminder_offset_minutes: null } });
+  const suggestedStart = initialValues?.startAt ? new Date(initialValues.startAt) : initialStart();
+  const start = Number.isNaN(suggestedStart.getTime()) ? initialStart() : suggestedStart;
+  const form = useForm<CalendarEventInput>({ resolver: zodResolver(createCalendarEventSchema()), defaultValues: event ? valuesFrom(event) : { couple_id: null, title: initialValues?.title ?? '', start_at: start.toISOString(), end_at: addHours(start, 1).toISOString(), visibility: 'private', location: '', notes: '', reminder_offset_minutes: null } });
   const startAt = useWatch({ control: form.control, name: 'start_at' });
   const endAt = useWatch({ control: form.control, name: 'end_at' });
   const visibility = useWatch({ control: form.control, name: 'visibility' });

@@ -4,6 +4,7 @@ import { CalendarDays, Home, ListChecks, Plus, Wallet } from 'lucide-react-nativ
 import { Keyboard, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dialog } from '@/components/ui/dialog';
+import { UnifiedCapture } from '@/components/capture/unified-capture';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
@@ -38,8 +39,14 @@ export function Navigation() {
       </View>
     </View>}
     <Dialog visible={capture} title="What’s on your mind?" eyebrow="Tell Tandem" onClose={() => setCapture(false)} variant="sheet">
-      <Text variant="caption" tone="secondary">Just capture it. We’ll keep things together.</Text>
-      <QuickActions onAction={() => setCapture(false)} hideTitle />
+      <Text variant="caption" tone="secondary">Write it naturally. Check what Tandem understood before saving.</Text>
+      <UnifiedCapture onAction={() => setCapture(false)} />
+      <View style={styles.actionDivider}>
+        <View style={styles.dividerLine} />
+        <Text variant="caption" tone="secondary">Or choose an action</Text>
+        <View style={styles.dividerLine} />
+      </View>
+      <QuickActions hideTitle onAction={() => setCapture(false)} />
     </Dialog>
   </>;
 }
@@ -48,4 +55,6 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', maxWidth: layout.contentMaxWidth, width: '100%', alignSelf: 'center', minHeight: layout.tabBarHeight - spacing.lg },
   link: { flex: 1, minHeight: layout.minTouchTarget, justifyContent: 'center', alignItems: 'center', gap: spacing.xs },
   capture: { width: layout.tabCaptureSize, height: layout.tabCaptureSize, marginHorizontal: spacing.sm, top: -spacing.lg, borderRadius: reference.stripRadius, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', ...shadows.card },
+  actionDivider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  dividerLine: { flex: 1, height: borders.thin, backgroundColor: colors.border },
 });
